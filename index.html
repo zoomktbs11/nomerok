@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Крутилка Номеров — Telegram Mini App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Bebas Neue, Montserrat, Roboto Condensed for ГОСТ precision -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Condensed:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Tone.js for game sound effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            appDark: '#0b0e11',
+            appCard: '#15191e',
+            appItem: '#1d232a',
+            appModal: '#181d22',
+            accentGreen: '#22c55e',
+            accentGreenDark: '#16a34a'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            plate: ['"Bebas Neue"', '"Roboto Condensed"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0b0e11;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      touch-action: pan-y;
+    }
+
+    /* Crisp Embossed ГОСТ Р 50577 License Plate Styling */
+    .plate-metallic-border {
+      position: relative;
+      background: linear-gradient(180deg, #2b2f36 0%, #171a1f 48%, #0d0f12 100%);
+      padding: 5px;
+      border-radius: 14px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 1px 1px rgba(255, 255, 255, 0.12);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .plate-face-sheet {
+      position: relative;
+      background: linear-gradient(180deg, #ffffff 0%, #f7f9fa 55%, #e6ebef 100%);
+      border: 3px solid #101214;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 2px rgba(255, 255, 255, 1),
+                  inset 0 -3px 4px rgba(0, 0, 0, 0.3);
+      color: #0d0e10;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      height: 102px;
+      width: 100%;
+    }
+
+    /* Square moto layout support */
+    .plate-moto-sheet {
+      height: 130px;
+      flex-direction: column;
+    }
+
+    /* Embossed Metal Letter Stamping */
+    .gost-char {
+      font-family: 'Bebas Neue', 'Roboto Condensed', sans-serif;
+      font-weight: 900;
+      line-height: 0.9;
+      color: #0a0a0c;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 -1.5px 0.5px rgba(0, 0, 0, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+    }
+
+    .gost-letter {
+      font-size: 58px;
+      letter-spacing: 1.5px;
+    }
+
+    .gost-digits {
+      font-size: 72px;
+      letter-spacing: 3px;
+    }
+
+    .gost-region-num {
+      font-size: 52px;
+      letter-spacing: -0.5px;
+      line-height: 0.85;
+    }
+
+    /* Plate Themes */
+    .plate-taxi .plate-face-sheet {
+      background: linear-gradient(180deg, #ffc938 0%, #f59e0b 80%, #d97706 100%);
+      border-color: #1a1608;
+    }
+    .plate-police .plate-face-sheet {
+      background: linear-gradient(180deg, #2b6bf3 0%, #1d4ed8 75%, #193cb8 100%);
+      border-color: #0b1220;
+    }
+    .plate-police .gost-char, .plate-military .gost-char, .plate-diplo .gost-char {
+      color: #ffffff !important;
+      text-shadow: 0 1.5px 2px rgba(0, 0, 0, 0.85) !important;
+    }
+    .plate-military .plate-face-sheet {
+      background: linear-gradient(180deg, #24272c 0%, #15171a 75%, #0a0b0d 100%);
+      border-color: #3f4652;
+    }
+    .plate-diplo .plate-face-sheet {
+      background: linear-gradient(180deg, #f03f3f 0%, #dc2626 75%, #991b1b 100%);
+      border-color: #450a0a;
+    }
+
+    /* Neon Rarity Aura */
+    .glow-rarity-0 { box-shadow: 0 0 16px rgba(156, 163, 175, 0.2), 0 16px 36px rgba(0,0,0,0.9); }
+    .glow-rarity-1 { box-shadow: 0 0 34px rgba(34, 197, 94, 0.45), 0 16px 36px rgba(0,0,0,0.9); }
+    .glow-rarity-2 { box-shadow: 0 0 42px rgba(59, 130, 246, 0.55), 0 16px 36px rgba(0,0,0,0.9); }
+    .glow-rarity-3 { box-shadow: 0 0 52px rgba(168, 85, 247, 0.65), 0 16px 36px rgba(0,0,0,0.9); }
+    .glow-rarity-4 { box-shadow: 0 0 65px rgba(234, 179, 8, 0.85), 0 0 25px rgba(245, 158, 11, 0.7); }
+
+    /* Animated Slot Rolling effect */
+    @keyframes slotRollingAnim {
+      0% { transform: translateY(0) scale(0.99); filter: blur(0px); }
+      30% { transform: translateY(-4px) scale(1.02); filter: blur(2px); }
+      70% { transform: translateY(4px) scale(0.98); filter: blur(1.5px); }
+      100% { transform: translateY(0) scale(1); filter: blur(0px); }
+    }
+    .slot-rolling {
+      animation: slotRollingAnim 0.07s infinite linear;
+    }
+
+    @keyframes dropImpactPop {
+      0% { transform: scale(1.12) translateY(-10px); }
+      60% { transform: scale(0.96) translateY(3px); }
+      85% { transform: scale(1.02) translateY(-1px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+    .plate-drop-pop {
+      animation: dropImpactPop 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Floating Balance Delta Badges */
+    @keyframes floatUpFade {
+      0% { opacity: 0; transform: translateY(6px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(-3px); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .balance-delta-anim {
+      animation: floatUpFade 1.4s ease-out forwards;
+    }
+
+    /* Modals & Bottom Sheets */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      transition: opacity 0.25s ease-out;
+    }
+    .sheet-drawer {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 90vh;
+    }
+
+    @keyframes lvlPopUp {
+      0% { transform: scale(0.65); opacity: 0; }
+      70% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .lvl-pop-anim {
+      animation: lvlPopUp 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen select-none max-w-md mx-auto relative border-x border-[#1a1f26] shadow-2xl bg-[#0b0e11]">
+
+  <!-- Top Navigation & Balance Synchronization Bar -->
+  <header class="px-4 pt-3 pb-2.5 flex items-center justify-between border-b border-[#181d24] z-10 sticky top-0 bg-[#0b0e11]/95 backdrop-blur-md">
+    <!-- Menu & Smooth XP Level Pill -->
+    <div class="flex items-center gap-2">
+      <button id="btnSideMenu" class="w-9 h-9 rounded-full bg-[#181d24] border border-[#262e3a] flex items-center justify-center text-gray-300 active:scale-95 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <!-- Level Pill with progressive scaling XP bar -->
+      <div id="levelPill" class="flex flex-col justify-center bg-[#161a20] px-3 py-1 rounded-2xl border border-[#262f3a] shadow-inner cursor-pointer active:scale-95 transition min-w-[108px]">
+        <div class="flex items-center justify-between gap-1.5">
+          <span class="text-xs font-black text-gray-100 flex items-center gap-1">
+            <span>Ур.</span>
+            <span id="userLevel" class="text-accentGreen">1</span>
+          </span>
+          <span class="text-[10px] font-bold text-gray-400 font-mono" id="xpText">0/500</span>
+        </div>
+        <div class="w-full h-1.5 bg-[#252c37] rounded-full overflow-hidden mt-0.5">
+          <div id="levelProgress" class="h-full bg-gradient-to-r from-accentGreen to-emerald-400 rounded-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clover / Luck Indicator -->
+    <div class="flex items-center gap-1.5 bg-[#161a20] px-3 py-1.5 rounded-full border border-[#232932] shadow-sm cursor-pointer active:scale-95 transition" id="cloverBadge">
+      <span class="text-base">🍀</span>
+      <span class="text-xs font-black text-gray-100" id="luckNumber">33</span>
+      <span class="text-[10px] bg-amber-400/20 text-amber-300 font-extrabold px-1.5 py-0.5 rounded-md border border-amber-400/30" id="luckMultiplierBadge">x2</span>
+    </div>
+
+    <!-- Balance Counter with Animated Deltas -->
+    <div class="text-right relative min-w-[95px] cursor-pointer" onclick="showToast('Текущий игровой баланс')">
+      <div class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Баланс</div>
+      <div class="text-sm font-black text-white tracking-tight flex items-center justify-end gap-1 font-mono">
+        <span id="userBalance">100 000</span> <span class="text-gray-300 font-normal">₽</span>
+      </div>
+      <!-- Floating Delta Indicator -->
+      <div id="balanceDelta" class="absolute -bottom-4 right-0 text-[11px] font-extrabold font-mono pointer-events-none hidden"></div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Номера / Машины / Магазин) -->
+  <div class="px-4 pt-3 flex items-center gap-2">
+    <button class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-[#2b333e] text-white shadow-inner transition">
+      Номера
+    </button>
+    <button onclick="showToast('Раздел «Машины» откроется на 5 уровне')" class="flex-1 py-2 rounded-xl text-xs font-bold bg-[#14181e] text-gray-400 hover:text-white border border-[#1f2631] transition">
+      Машины
+    </button>
+    <button onclick="showToast('Магазин откроется в обновлении 1.2')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-[#1a1708] border border-amber-500/30 text-amber-300 flex items-center justify-center gap-1 shadow-sm active:scale-95 transition">
+      <span>⭐</span> Магазин
+    </button>
+  </div>
+
+  <!-- Season Promo Banner -->
+  <div class="px-4 pt-2.5">
+    <div class="bg-gradient-to-r from-[#2a0e1c] via-[#24131e] to-[#1a1322] border border-pink-500/20 rounded-2xl p-2.5 flex items-center justify-between shadow-md relative overflow-hidden">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-xl shadow-inner">
+          💥
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5 text-xs font-bold text-white">
+            <span>Старт сезона: удача x5</span>
+            <span class="line-through text-gray-400 text-[10px]">274</span>
+            <span class="text-amber-400 font-extrabold flex items-center gap-0.5">192 ⭐</span>
+          </div>
+          <div class="text-[11px] text-gray-300 flex items-center gap-1 mt-0.5">
+            <span>🍀 Удача x5 · 1 дн. · ещё <span id="promoTimer" class="font-mono text-gray-200 font-semibold">20:51:14</span></span>
+          </div>
+        </div>
+      </div>
+      <button class="text-gray-400 hover:text-white p-1" onclick="showToast('Акция активна!')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sponsor Badge -->
+  <div class="px-4 pt-2">
+    <div class="bg-[#14181e] border border-[#232933] rounded-xl px-3 py-1.5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="text-base">🥷</div>
+        <div class="text-xs font-bold text-gray-200">Ottera VPN С ОБХОДОМ ГЛУШИЛОК 📡</div>
+      </div>
+      <span class="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Реклама</span>
+    </div>
+  </div>
+
+  <!-- Main Game Stage / Plate Display -->
+  <main class="flex-1 px-4 py-3 flex flex-col justify-center relative">
+    
+    <!-- Rarity Header & Price Bar -->
+    <div class="flex items-center justify-between mb-2.5 px-1">
+      <div>
+        <div id="rarityName" class="text-sm font-extrabold text-accentGreen flex items-center gap-1.5">
+          <span>Необычный</span>
+          <span id="rarityXpBadge" class="text-[10px] bg-accentGreen/15 text-accentGreen px-1.5 py-0.5 rounded font-mono font-bold">+5 XP</span>
+        </div>
+        <!-- 10 Rarity Bars -->
+        <div class="flex items-center gap-1 mt-1.5" id="rarityBars">
+          <!-- Rendered in JS -->
+        </div>
+      </div>
+      <div class="text-right">
+        <div id="platePrice" class="text-xl font-black text-accentGreen tracking-tight font-mono">2 763 ₽</div>
+      </div>
+    </div>
+
+    <!-- Authentic Russian Plate (High Contrast ГОСТ Layout) -->
+    <div class="relative py-2 flex items-center justify-center">
+      <div id="plateOuterGlow" class="plate-metallic-border w-full glow-rarity-1">
+        <div id="licensePlateContainer" class="plate-face-sheet">
+          
+          <!-- Standard Single-Row Layout -->
+          <div id="standardPlateLayout" class="flex-1 flex items-stretch w-full">
+            <!-- Left: Main Section [Series Letter + 3 Digits + 2 Letters] -->
+            <div class="flex-1 flex items-center justify-between px-3 sm:px-4 py-1 border-r-[3px] border-black/85 relative overflow-hidden">
+              <!-- First Letter -->
+              <div class="w-[18%] flex justify-center">
+                <span id="plateLetterFirst" class="gost-char gost-letter">Е</span>
+              </div>
+              
+              <!-- Three Main Numbers -->
+              <div id="plateDigitsGroup" class="w-[50%] flex items-center justify-center gap-1">
+                <span id="digit1" class="gost-char gost-digits">0</span>
+                <span id="digit2" class="gost-char gost-digits">6</span>
+                <span id="digit3" class="gost-char gost-digits">9</span>
+              </div>
+              
+              <!-- Two Suffix Letters -->
+              <div class="w-[30%] flex items-center justify-center gap-1">
+                <span id="plateLetterSecond" class="gost-char gost-letter">К</span>
+                <span id="plateLetterThird" class="gost-char gost-letter">Е</span>
+              </div>
+            </div>
+
+            <!-- Right: Region & Russian Tricolor Section -->
+            <div class="w-[86px] shrink-0 flex flex-col items-center justify-between py-1.5 px-1 bg-inherit">
+              <div id="plateRegion" class="gost-char gost-region-num mt-0.5">77</div>
+              <div class="flex items-center gap-1.5 pb-0.5">
+                <span class="rus-text font-black text-[13px] leading-none text-current tracking-tight font-sans">RUS</span>
+                <!-- Crisp Russian Tricolor Flag -->
+                <div class="w-[20px] h-[13px] border-[1.2px] border-black/80 flex flex-col rounded-[1px] overflow-hidden shadow-sm">
+                  <div class="h-1/3 bg-white"></div>
+                  <div class="h-1/3 bg-[#0039A6]"></div>
+                  <div class="h-1/3 bg-[#D52B1E]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Moto Two-Row Layout (Hidden unless Moto selected) -->
+          <div id="motoPlateLayout" class="hidden flex-col items-center justify-between p-2 w-full h-full">
+            <div class="flex items-center justify-between w-full px-4 border-b-2 border-black/80 pb-1">
+              <span id="motoDigitsTop" class="gost-char text-4xl">12 34</span>
+              <div class="flex flex-col items-center">
+                <span id="motoRegion" class="gost-char text-3xl leading-none">77</span>
+                <span class="text-[10px] font-black font-sans leading-none">RUS</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-center w-full pt-1">
+              <span id="motoLettersBottom" class="gost-char text-4xl tracking-widest">А В</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Geographic & Modifiers Section -->
+    <div class="mt-2.5 text-center">
+      <div id="regionSubtext" class="text-xs text-gray-400 font-medium tracking-wide">Регион 77 · Москва</div>
+      
+      <!-- Modifiers List -->
+      <div id="modifiersList" class="mt-2 space-y-0.5 text-xs font-semibold">
+        <div class="text-gray-300 flex items-center justify-center gap-1">
+          <span>🍀</span> Удача: лучший из 2 номеров
+        </div>
+        <div class="text-accentGreen">Столичный регион <span class="font-bold">×1,4</span></div>
+        <div class="text-accentGreen">Ноль впереди <span class="font-bold">×2</span></div>
+        <div class="text-accentGreen">Палиндром букв <span class="font-bold">×3</span></div>
+      </div>
+    </div>
+
+    <!-- Actions: Save to Garage & Share -->
+    <div class="mt-4 flex items-center justify-center gap-3">
+      <button id="btnSaveToGarage" class="px-6 py-2.5 rounded-xl bg-[#1e242d] hover:bg-[#28303c] border border-[#2d3542] text-sm font-extrabold text-white active:scale-95 transition shadow-sm flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-accentGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        <span>В гараж</span>
+      </button>
+      <button id="btnShare" class="w-11 h-11 rounded-xl bg-[#1e242d] hover:bg-[#28303c] border border-[#2d3542] text-gray-300 flex items-center justify-center active:scale-95 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      </button>
+    </div>
+
+    <div class="text-center mt-2 text-xs text-gray-400">
+      Этот номер продастся за <span id="sellPriceNote" class="font-bold text-gray-200 font-mono">2 763 ₽</span>
+    </div>
+  </main>
+
+  <!-- Spin Configurations Bar -->
+  <section class="px-4 pb-2 pt-1 flex items-center gap-2">
+    <!-- Country & Plate Type Selector -->
+    <button id="btnOpenCountrySheet" class="flex-1 py-2.5 px-3 rounded-xl bg-[#15191f] border border-[#232a35] flex items-center justify-between text-xs font-bold text-gray-200 active:scale-95 transition">
+      <div class="flex items-center gap-1.5 truncate">
+        <span id="selectedCountryFlag">🇷🇺</span>
+        <span id="selectedCountryText" class="truncate">Россия · 77</span>
+      </div>
+      <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <!-- Bet Guarantee Selector -->
+    <button id="btnOpenBetSheet" class="flex-1 py-2.5 px-3 rounded-xl bg-[#15191f] border border-[#232a35] flex items-center justify-between text-xs font-bold text-gray-200 active:scale-95 transition">
+      <div class="truncate">
+        <span id="selectedBetText">Ставка ×1</span>
+      </div>
+      <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <!-- 1x / 5x Multiplier Toggle -->
+    <button id="btnToggleSpinMode" class="w-14 py-2.5 rounded-xl bg-[#1d242c] border border-[#2d3644] text-xs font-black text-accentGreen active:scale-95 transition flex items-center justify-center">
+      5×
+    </button>
+  </section>
+
+  <!-- Big Roll Button -->
+  <div class="px-4 pb-3">
+    <button id="btnSpin" class="w-full py-4 rounded-2xl bg-accentGreen hover:bg-accentGreenDark active:scale-[0.98] transition-all duration-150 text-black font-black text-base tracking-wide flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(34,197,94,0.4)]">
+      <span id="spinButtonText">Крутить ещё ×5</span>
+      <span id="spinButtonPrice" class="bg-black/15 px-2.5 py-1 rounded-lg text-sm font-mono">11 500 ₽</span>
+    </button>
+  </div>
+
+  <!-- Bottom Telegram App Navigation -->
+  <nav class="border-t border-[#181d24] bg-[#0c0f13]/95 backdrop-blur-md px-3 py-2 flex items-center justify-around z-10 sticky bottom-0">
+    <button class="flex flex-col items-center gap-1 text-accentGreen active:scale-95 transition">
+      <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="text-[10px] font-black">Играть</span>
+    </button>
+    <button id="navGarageBtn" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-200 active:scale-95 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="text-[10px] font-bold">Гараж (<span id="garageCount">0</span>)</span>
+    </button>
+    <button onclick="showToast('Рынок откроется скоро')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-200 active:scale-95 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      <span class="text-[10px] font-bold">Рынок</span>
+    </button>
+    <button onclick="showToast('Реферальная программа скоро')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-200 active:scale-95 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span class="text-[10px] font-bold">Друзья</span>
+    </button>
+    <button id="btnResetProgress" class="flex flex-col items-center gap-1 text-gray-400 hover:text-red-400 active:scale-95 transition" title="Сбросить прогресс">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      <span class="text-[10px] font-bold">Сброс</span>
+    </button>
+  </nav>
+
+  <!-- LEVEL UP POPUP CELEBRATION MODAL -->
+  <div id="levelUpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-backdrop absolute inset-0" id="levelUpBackdrop"></div>
+    <div class="relative bg-gradient-to-b from-[#1c2430] to-[#12161c] border-2 border-accentGreen/70 rounded-3xl p-6 text-center max-w-xs w-full shadow-[0_0_50px_rgba(34,197,94,0.4)] lvl-pop-anim z-10">
+      <div class="text-5xl mb-2">🎉</div>
+      <div class="text-xs font-black uppercase text-accentGreen tracking-widest">Новый Уровень!</div>
+      <div class="text-4xl font-black text-white my-1 font-mono">УРОВЕНЬ <span id="newLevelNumber" class="text-accentGreen">2</span></div>
+      <p class="text-xs text-gray-300 mt-2 mb-4 leading-relaxed" id="levelRewardDesc">
+        Поздравляем! Вам начислена премия за прокачку: <br><span class="text-amber-400 font-bold">+15 000 ₽</span> и повышен шанс на спецсерии!
+      </p>
+      <button id="btnClaimLevelUp" class="w-full py-3 rounded-xl bg-accentGreen hover:bg-accentGreenDark text-black font-black text-sm active:scale-95 transition shadow-lg">
+        Забрать награду!
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL BOTTOM SHEET: "Ставка" -->
+  <div id="betModal" class="fixed inset-0 z-50 flex flex-col justify-end hidden">
+    <div class="modal-backdrop absolute inset-0" id="betModalBackdrop"></div>
+    <div class="sheet-drawer relative w-full bg-[#161a20] rounded-t-3xl border-t border-[#2a323d] p-5 overflow-y-auto">
+      <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-4 opacity-60"></div>
+      <h2 class="text-xl font-black text-center text-white mb-2">Ставка</h2>
+      <p class="text-xs text-gray-400 text-center leading-relaxed mb-5 px-2">
+        Дороже крутка — выше гарантированная редкость. Цена примерно равна средней стоимости такого номера, так что это не бесплатные деньги, а быстрый путь к редким номерам.
+      </p>
+
+      <div class="space-y-2.5" id="betOptionsContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="mt-5 text-center text-xs text-gray-400 space-y-1">
+        <div>Россия · Гражданский · кошелёк <span class="text-white font-bold" id="sheetWalletAmount">100 000 ₽</span></div>
+        <div class="text-gray-500 text-[11px]">Бесплатные попытки тратятся только на обычную крутку.</div>
+        <div class="text-[11px] text-gray-400 pt-1 flex items-center justify-center gap-1">
+          <span>🎰</span> Включён ×5: цена выше — за пять бросков сразу, все с гарантией выбранной редкости.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL BOTTOM SHEET: "Какие номера крутить" -->
+  <div id="countryModal" class="fixed inset-0 z-50 flex flex-col justify-end hidden">
+    <div class="modal-backdrop absolute inset-0" id="countryModalBackdrop"></div>
+    <div class="sheet-drawer relative w-full bg-[#161a20] rounded-t-3xl border-t border-[#2a323d] p-5 overflow-y-auto max-h-[92vh]">
+      <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-3 opacity-60"></div>
+      
+      <h2 class="text-xl font-black text-center text-white mb-1">Какие номера крутить</h2>
+      <p class="text-xs text-gray-400 text-center mb-4">У каждой страны свой кошелёк</p>
+
+      <div class="grid grid-cols-2 gap-2 mb-5" id="countryGrid">
+        <!-- Generated via JS -->
+      </div>
+
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-1">Тип номерного знака</div>
+      <div class="space-y-2 pb-4" id="plateTypeList">
+        <!-- Generated via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: "Гараж" -->
+  <div id="garageModal" class="fixed inset-0 z-50 flex flex-col justify-end hidden">
+    <div class="modal-backdrop absolute inset-0" id="garageModalBackdrop"></div>
+    <div class="sheet-drawer relative w-full bg-[#161a20] rounded-t-3xl border-t border-[#2a323d] p-5 flex flex-col max-h-[85vh]">
+      <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-3 opacity-60"></div>
+      
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h2 class="text-xl font-black text-white">Гараж номеров</h2>
+          <div class="text-xs text-gray-400">Сохранённые коллекции и трофеи</div>
+        </div>
+        <button id="btnCloseGarage" class="text-gray-400 hover:text-white p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-2.5 pr-1" id="garageListContainer">
+        <!-- Rendered in JS -->
+      </div>
+
+      <div class="pt-3 border-t border-[#2a323d] mt-2 flex gap-2">
+        <button id="btnSellAllGarage" class="w-full py-2.5 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400 text-xs font-extrabold hover:bg-red-600/30 transition">
+          Продать все номера из гаража
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#1c232d] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-gray-700 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2">
+    Уведомление
+  </div>
+  <script>
+    /* =========================================================
+       CONSTANTS & PROGRESSION FORMULAS
+       ========================================================= */
+    const ALLOWED_LETTERS = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
+    const REGIONS = [
+      { code: '77', name: 'Москва', isCapital: true },
+      { code: '777', name: 'Москва', isCapital: true },
+      { code: '99', name: 'Москва', isCapital: true },
+      { code: '78', name: 'Санкт-Петербург', isCapital: false },
+      { code: '178', name: 'Санкт-Петербург', isCapital: false },
+      { code: '16', name: 'Татарстан', isCapital: false },
+      { code: '23', name: 'Краснодарский край', isCapital: false },
+      { code: '66', name: 'Свердловская обл.', isCapital: false },
+      { code: '50', name: 'Московская обл.', isCapital: false }
+    ];
+
+    const BET_TIERS = [
+      {
+        id: 'common',
+        title: 'Обычная крутка',
+        subtitle: 'любой номер',
+        multiplier: 1,
+        color: 'text-gray-200',
+        singleCost: 2300,
+        minRarity: 0
+      },
+      {
+        id: 'uncommon',
+        title: 'Необычный и выше',
+        subtitle: 'гарантия редкости · ×8 к цене',
+        multiplier: 8,
+        color: 'text-accentGreen',
+        singleCost: 18400,
+        minRarity: 1
+      },
+      {
+        id: 'rare',
+        title: 'Редкий и выше',
+        subtitle: 'гарантия редкости · ×35 к цене',
+        multiplier: 35,
+        color: 'text-blue-400',
+        singleCost: 80500,
+        minRarity: 2
+      },
+      {
+        id: 'epic',
+        title: 'Эпический и выше',
+        subtitle: 'гарантия редкости · ×110 к цене',
+        multiplier: 110,
+        color: 'text-purple-400',
+        singleCost: 253000,
+        minRarity: 3
+      },
+      {
+        id: 'legendary',
+        title: 'Легендарный и выше',
+        subtitle: 'гарантия редкости · ×820 к цене',
+        multiplier: 820,
+        color: 'text-amber-400',
+        singleCost: 1886000,
+        minRarity: 4
+      }
+    ];
+
+    const COUNTRIES = [
+      { id: 'ru', name: 'Россия', flag: '🇷🇺', defRegion: '77' },
+      { id: 'by', name: 'Беларусь', flag: '🇧🇾', defRegion: '7' },
+      { id: 'kz', name: 'Казахстан', flag: '🇰🇿', defRegion: '01' },
+      { id: 'ae', name: 'ОАЭ', flag: '🇦🇪', defRegion: 'DXB' },
+      { id: 'ab', name: 'Абхазия', flag: '🇦🇧', defRegion: 'ABH' },
+      { id: 'ua', name: 'Украина', flag: '🇺🇦', defRegion: 'AA' },
+      { id: 'de', name: 'Германия', flag: '🇩🇪', defRegion: 'B' },
+      { id: 'az', name: 'Азербайджан', flag: '🇦🇿', defRegion: '99' },
+      { id: 'am', name: 'Армения', flag: '🇦🇲', defRegion: '01' },
+      { id: 'ge', name: 'Грузия', flag: '🇬🇪', defRegion: 'TB' },
+      { id: 'us', name: 'США', flag: '🇺🇸', defRegion: 'CAL' },
+      { id: 'uz', name: 'Узбекистан', flag: 'UZ', defRegion: '01' }
+    ];
+
+    const PLATE_TYPES = [
+      { id: 'civil', name: 'Гражданский', previewText: 'А 123 ВС 77', styleClass: '', note: '' },
+      { id: 'taxi', name: 'Такси', previewText: 'АВ 123 77', styleClass: 'plate-taxi', note: 'жёлтый' },
+      { id: 'police', name: 'Полиция', previewText: 'А 1234 77', styleClass: 'plate-police', note: 'синий' },
+      { id: 'military', name: 'Военный', previewText: '1234 АВ 77', styleClass: 'plate-military', note: 'чёрный' },
+      { id: 'diplo', name: 'Дипломатический', previewText: '123 CD 77', styleClass: 'plate-diplo', note: 'красный' },
+      { id: 'moto', name: 'Мотоцикл', previewText: '1234 АВ 77', styleClass: 'plate-moto', note: 'квадратный' }
+    ];
+
+    // Smooth XP curve: level 1 = 500, level 2 = 1200, level 3 = 2500, level 4 = 4500...
+    const LEVEL_XP_TABLE = [0, 500, 1200, 2500, 4500, 7500, 12000, 18000, 26000, 37000, 52000];
+    function getXpForLevel(lvl) {
+      if (lvl < LEVEL_XP_TABLE.length) return LEVEL_XP_TABLE[lvl];
+      return Math.round(52000 * Math.pow(1.35, lvl - 10));
+    }
+
+    // Realistic modest XP rewards per rarity:
+    // Common: 1-2 XP, Uncommon: 5 XP, Rare: 20 XP, Epic: 80 XP, Legendary: 300 XP
+    const RARITIES = [
+      { name: 'Обычный', color: '#9ca3af', glowClass: 'glow-rarity-0', barClass: 'bg-gray-500', xp: 2 },
+      { name: 'Необычный', color: '#22c55e', glowClass: 'glow-rarity-1', barClass: 'bg-accentGreen', xp: 5 },
+      { name: 'Редкий', color: '#3b82f6', glowClass: 'glow-rarity-2', barClass: 'bg-blue-500', xp: 20 },
+      { name: 'Эпический', color: '#a855f7', glowClass: 'glow-rarity-3', barClass: 'bg-purple-500', xp: 80 },
+      { name: 'Легендарный', color: '#eab308', glowClass: 'glow-rarity-4', barClass: 'bg-amber-400', xp: 300 }
+    ];
+
+    /* Persistent Player State */
+    const STORAGE_KEY = 'car_numbers_game_save_v2';
+
+    let state = {
+      level: 1,
+      currentXp: 0,
+      balance: 100000,
+      luck: 33,
+      luckMultiplier: 2,
+      isSpin5x: true,
+      selectedBetId: 'common',
+      selectedCountryId: 'ru',
+      selectedPlateTypeId: 'civil',
+      isRolling: false,
+      currentPlate: null,
+      garage: []
+    };
+
+    function saveState() {
+      try {
+        const payload = {
+          level: state.level,
+          currentXp: state.currentXp,
+          balance: state.balance,
+          luck: state.luck,
+          luckMultiplier: state.luckMultiplier,
+          isSpin5x: state.isSpin5x,
+          selectedBetId: state.selectedBetId,
+          selectedCountryId: state.selectedCountryId,
+          selectedPlateTypeId: state.selectedPlateTypeId,
+          garage: state.garage
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {}
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.level = parsed.level || 1;
+          state.currentXp = parsed.currentXp || 0;
+          state.balance = typeof parsed.balance === 'number' ? parsed.balance : 100000;
+          state.luck = parsed.luck || 33;
+          state.luckMultiplier = parsed.luckMultiplier || 2;
+          state.isSpin5x = parsed.isSpin5x !== undefined ? parsed.isSpin5x : true;
+          state.selectedBetId = parsed.selectedBetId || 'common';
+          state.selectedCountryId = parsed.selectedCountryId || 'ru';
+          state.selectedPlateTypeId = parsed.selectedPlateTypeId || 'civil';
+          state.garage = Array.isArray(parsed.garage) ? parsed.garage : [];
+        }
+      } catch (e) {}
+    }
+
+    /* Web Audio System via Tone.js */
+    let synth = null;
+    let tickSynth = null;
+    let coinSynth = null;
+
+    function initAudio() {
+      if (!synth && window.Tone) {
+        Tone.start();
+        synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.volume.value = -10;
+        
+        tickSynth = new Tone.MembraneSynth().toDestination();
+        tickSynth.volume.value = -15;
+
+        coinSynth = new Tone.MetalSynth({
+          frequency: 250,
+          envelope: { attack: 0.001, decay: 0.08, release: 0.01 },
+          harmonicity: 3.1,
+          modulationIndex: 16,
+          resonance: 4000,
+          octaves: 1.5
+        }).toDestination();
+        coinSynth.volume.value = -18;
+      }
+    }
+
+    function playTick() {
+      try { if (tickSynth) tickSynth.triggerAttackRelease('A2', '32n'); } catch (e) {}
+    }
+
+    function playCoin() {
+      try { if (coinSynth) coinSynth.triggerAttackRelease('16n'); } catch (e) {}
+    }
+
+    function playWinSound(rarityIndex) {
+      try {
+        if (!synth) return;
+        const chords = [
+          ['C4', 'E4'],
+          ['D4', 'F#4', 'A4'],
+          ['E4', 'G#4', 'B4', 'E5'],
+          ['G4', 'B4', 'D5', 'G5'],
+          ['C5', 'E5', 'G5', 'B5', 'C6']
+        ];
+        synth.triggerAttackRelease(chords[rarityIndex] || ['C4', 'E4'], '8n');
+      } catch (e) {}
+    }
+
+    function playLevelUpSound() {
+      try {
+        if (!synth) return;
+        const now = Tone.now();
+        synth.triggerAttackRelease('C4', '16n', now);
+        synth.triggerAttackRelease('E4', '16n', now + 0.1);
+        synth.triggerAttackRelease('G4', '16n', now + 0.2);
+        synth.triggerAttackRelease(['C5', 'G5'], '4n', now + 0.3);
+      } catch (e) {}
+    }
+
+    /* XP Progression Engine */
+    function addXp(amount) {
+      state.currentXp += amount;
+      let needed = getXpForLevel(state.level);
+
+      while (state.currentXp >= needed) {
+        state.currentXp -= needed;
+        state.level += 1;
+        needed = getXpForLevel(state.level);
+        onLevelUp(state.level);
+      }
+
+      updateLevelUI();
+      saveState();
+    }
+
+    function updateLevelUI() {
+      const needed = getXpForLevel(state.level);
+      document.getElementById('userLevel').textContent = state.level;
+      document.getElementById('xpText').textContent = `${state.currentXp}/${needed}`;
+      
+      const pct = Math.min(100, Math.round((state.currentXp / needed) * 100));
+      document.getElementById('levelProgress').style.width = `${pct}%`;
+    }
+
+    function onLevelUp(newLevel) {
+      playLevelUpSound();
+      const bonusMoney = 15000 * newLevel;
+      state.balance += bonusMoney;
+      
+      // Luck increases every 2 levels
+      if (newLevel % 2 === 0) {
+        state.luck += 1;
+        document.getElementById('luckNumber').textContent = state.luck;
+      }
+
+      document.getElementById('userBalance').textContent = formatMoney(state.balance);
+      document.getElementById('newLevelNumber').textContent = newLevel;
+      document.getElementById('levelRewardDesc').innerHTML = `Поздравляем! Вам начислена премия за уровень: <br><span class="text-amber-400 font-bold">+${formatMoney(bonusMoney)} ₽</span> и повышен шанс на редкие серии!`;
+      
+      const modal = document.getElementById('levelUpModal');
+      modal.classList.remove('hidden');
+      saveState();
+    }
+
+    /* Balance Sync & Floating Delta Animations */
+    function showBalanceDelta(amount, isPositive) {
+      const el = document.getElementById('balanceDelta');
+      if (!el) return;
+      el.classList.remove('hidden', 'balance-delta-anim');
+      
+      // Trigger DOM reflow to restart CSS animation cleanly
+      void el.offsetWidth;
+      
+      if (isPositive) {
+        el.className = 'absolute -bottom-4 right-0 text-[11px] font-black font-mono text-accentGreen balance-delta-anim';
+        el.textContent = `+${formatMoney(amount)} ₽`;
+      } else {
+        el.className = 'absolute -bottom-4 right-0 text-[11px] font-black font-mono text-red-400 balance-delta-anim';
+        el.textContent = `-${formatMoney(amount)} ₽`;
+      }
+
+      setTimeout(() => {
+        el.classList.add('hidden');
+      }, 1400);
+    }
+
+    function updateBalanceUI() {
+      document.getElementById('userBalance').textContent = formatMoney(state.balance);
+      const sheetWallet = document.getElementById('sheetWalletAmount');
+      if (sheetWallet) sheetWallet.textContent = `${formatMoney(state.balance)} ₽`;
+    }
+
+    /* License Plate Generator Algorithm */
+    function evaluateRussianPlate(l1, d1, d2, d3, l2, l3, region) {
+      const digits = `${d1}${d2}${d3}`;
+      const letters = `${l1}${l2}${l3}`;
+      let rarity = 0; // 0: Common, 1: Uncommon, 2: Rare, 3: Epic, 4: Legendary
+      let basePrice = 850;
+      let modifiers = [];
+
+      modifiers.push({ text: '🍀 Удача: лучший из 2 номеров', isAccent: false });
+
+      if (region.isCapital) {
+        basePrice *= 1.4;
+        modifiers.push({ text: `Столичный регион (код ${region.code}) ×1,4`, isAccent: true });
+      }
+
+      // Triple Digits (777, 999, etc)
+      if (d1 === d2 && d2 === d3) {
+        if (digits === '777') {
+          rarity = Math.max(rarity, 4);
+          basePrice *= 24;
+          modifiers.push({ text: 'Красивые три семерки (777) ×24', isAccent: true });
+        } else {
+          rarity = Math.max(rarity, 3);
+          basePrice *= 12;
+          modifiers.push({ text: `Три одинаковые цифры (${digits}) ×12`, isAccent: true });
+        }
+      }
+
+      // Leading zero
+      if (d1 === '0') {
+        if (d2 === '0') {
+          rarity = Math.max(rarity, 3);
+          basePrice *= 6.5;
+          modifiers.push({ text: `Первая десятка (${digits}) ×6,5`, isAccent: true });
+        } else {
+          rarity = Math.max(rarity, 1);
+          basePrice *= 2;
+          modifiers.push({ text: 'Ноль впереди ×2', isAccent: true });
+        }
+      }
+
+      // Round hundreds
+      if (d2 === '0' && d3 === '0') {
+        rarity = Math.max(rarity, 2);
+        basePrice *= 3.8;
+        modifiers.push({ text: `Круглые сотни (${digits}) ×3,8`, isAccent: true });
+      }
+
+      // Mirror digits
+      if (d1 === d3 && d1 !== d2) {
+        rarity = Math.max(rarity, 1);
+        basePrice *= 1.9;
+        modifiers.push({ text: `Зеркальные цифры (${digits}) ×1,9`, isAccent: true });
+      }
+
+      // Letters palindrome
+      if (l1 === l3) {
+        rarity = Math.max(rarity, 1);
+        basePrice *= 3;
+        modifiers.push({ text: `Палиндром букв (${l1}..${l3}) ×3`, isAccent: true });
+      }
+
+      // VIP Specials
+      const vipSerials = ['АМР', 'ЕКХ', 'ВОР', 'ХАМ', 'ССС', 'ААА', 'ООО', 'МММ'];
+      if (vipSerials.includes(letters)) {
+        rarity = Math.max(rarity, 4);
+        basePrice *= 32;
+        modifiers.push({ text: `Блатная спецсерия ${letters} ×32`, isAccent: true });
+      } else if (l1 === l2 && l2 === l3) {
+        rarity = Math.max(rarity, 3);
+        basePrice *= 8;
+        modifiers.push({ text: `Три одинаковые буквы (${letters}) ×8`, isAccent: true });
+      }
+
+      // Enforce selected minimum rarity from bet tier
+      const selectedBet = BET_TIERS.find(b => b.id === state.selectedBetId);
+      if (selectedBet && rarity < selectedBet.minRarity) {
+        rarity = selectedBet.minRarity;
+      }
+
+      const finalPrice = Math.round(basePrice * (1 + rarity * 1.6) * (1 + Math.random() * 0.12));
+
+      return {
+        l1, d1, d2, d3, l2, l3,
+        digits, letters, region,
+        rarity,
+        price: finalPrice,
+        modifiers: modifiers.slice(0, 4)
+      };
+    }
+
+    function getRandomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generatePlateCandidate() {
+      const l1 = getRandomItem(ALLOWED_LETTERS);
+      const l2 = getRandomItem(ALLOWED_LETTERS);
+      const l3 = getRandomItem(ALLOWED_LETTERS);
+      const d1 = String(Math.floor(Math.random() * 10));
+      const d2 = String(Math.floor(Math.random() * 10));
+      const d3 = String(Math.floor(Math.random() * 10));
+      const region = getRandomItem(REGIONS);
+      return evaluateRussianPlate(l1, d1, d2, d3, l2, l3, region);
+    }
+
+    function formatMoney(num) {
+      return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.innerText = text;
+      t.classList.remove('opacity-0', '-translate-y-2');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.add('opacity-0', '-translate-y-2');
+        t.classList.remove('opacity-100', 'translate-y-0');
+      }, 2400);
+    }
+
+    function renderRarityBars(rarityIndex) {
+      const container = document.getElementById('rarityBars');
+      container.innerHTML = '';
+      const totalBars = 10;
+      const filledBars = (rarityIndex + 1) * 2;
+      const activeColor = RARITIES[rarityIndex].barClass;
+
+      for (let i = 0; i < totalBars; i++) {
+        const bar = document.createElement('div');
+        bar.className = `w-4 h-1.5 rounded-full transition-colors duration-200 ${i < filledBars ? activeColor : 'bg-[#1e252e]'}`;
+        container.appendChild(bar);
+      }
+    }
+
+    function updatePlateUI(plate) {
+      const currentPlateType = PLATE_TYPES.find(p => p.id === state.selectedPlateTypeId) || PLATE_TYPES[0];
+      const isMoto = currentPlateType.id === 'moto';
+
+      const standardLayout = document.getElementById('standardPlateLayout');
+      const motoLayout = document.getElementById('motoPlateLayout');
+      const plateFaceSheet = document.getElementById('licensePlateContainer');
+
+      if (isMoto) {
+        standardLayout.classList.add('hidden');
+        motoLayout.classList.remove('hidden');
+        motoLayout.classList.add('flex');
+        plateFaceSheet.classList.add('plate-moto-sheet');
+
+        document.getElementById('motoDigitsTop').textContent = `${plate.d1}${plate.d2} ${plate.d3}${plate.d1}`;
+        document.getElementById('motoRegion').textContent = plate.region.code;
+        document.getElementById('motoLettersBottom').textContent = `${plate.l1} ${plate.l2}`;
+      } else {
+        standardLayout.classList.remove('hidden');
+        motoLayout.classList.add('hidden');
+        motoLayout.classList.remove('flex');
+        plateFaceSheet.classList.remove('plate-moto-sheet');
+
+        // Clear and set single-row characters
+        document.getElementById('plateLetterFirst').textContent = plate.l1;
+        document.getElementById('digit1').textContent = plate.d1;
+        document.getElementById('digit2').textContent = plate.d2;
+        document.getElementById('digit3').textContent = plate.d3;
+        document.getElementById('plateLetterSecond').textContent = plate.l2;
+        document.getElementById('plateLetterThird').textContent = plate.l3;
+        document.getElementById('plateRegion').textContent = plate.region.code;
+      }
+
+      // Outer glow and style class
+      const outerGlow = document.getElementById('plateOuterGlow');
+      const rar = RARITIES[plate.rarity];
+      
+      outerGlow.className = `plate-metallic-border w-full ${rar.glowClass} plate-drop-pop`;
+      plateFaceSheet.className = `plate-face-sheet ${currentPlateType.styleClass} ${isMoto ? 'plate-moto-sheet' : ''}`;
+
+      // Region subtext
+      document.getElementById('regionSubtext').textContent = `Регион ${plate.region.code} · ${plate.region.name}`;
+
+      // Rarity Text & XP Badge
+      const rarName = document.getElementById('rarityName');
+      const awardedXp = rar.xp * (state.isSpin5x ? 5 : 1);
+      rarName.innerHTML = `
+        <span>${rar.name}</span>
+        <span class="text-[10px] bg-accentGreen/15 text-accentGreen px-1.5 py-0.5 rounded font-mono font-bold">+${awardedXp} XP</span>
+      `;
+      rarName.style.color = rar.color;
+
+      // Price Formatting
+      const formattedPrice = `${formatMoney(plate.price)} ₽`;
+      const priceElem = document.getElementById('platePrice');
+      priceElem.textContent = formattedPrice;
+      priceElem.style.color = rar.color;
+      document.getElementById('sellPriceNote').textContent = formattedPrice;
+
+      renderRarityBars(plate.rarity);
+
+      // Modifiers list
+      const modList = document.getElementById('modifiersList');
+      modList.innerHTML = '';
+      plate.modifiers.forEach(m => {
+        const row = document.createElement('div');
+        row.className = m.isAccent ? 'text-accentGreen' : 'text-gray-300';
+        row.innerHTML = m.text;
+        modList.appendChild(row);
+      });
+    }
+
+    function calculateSpinPrice() {
+      const bet = BET_TIERS.find(b => b.id === state.selectedBetId) || BET_TIERS[0];
+      return state.isSpin5x ? bet.singleCost * 5 : bet.singleCost;
+    }
+
+    function updateSpinButtonUI() {
+      const totalCost = calculateSpinPrice();
+      const countText = state.isSpin5x ? '×5' : '×1';
+      document.getElementById('spinButtonText').textContent = `Крутить ещё ${countText}`;
+      document.getElementById('spinButtonPrice').textContent = `${formatMoney(totalCost)} ₽`;
+      document.getElementById('btnToggleSpinMode').textContent = state.isSpin5x ? '5×' : '1×';
+    }
+
+    /* Core Spin Logic with Exact Balance Synchronization */
+    async function spin() {
+      if (state.isRolling) return;
+      initAudio();
+
+      const spinCost = calculateSpinPrice();
+      if (state.balance < spinCost) {
+        showToast('Недостаточно рублей на балансе!');
+        return;
+      }
+
+      // Step 1: Immediately deduct the spin cost and show the red delta
+      state.balance -= spinCost;
+      updateBalanceUI();
+      showBalanceDelta(spinCost, false);
+
+      state.isRolling = true;
+      const spinBtn = document.getElementById('btnSpin');
+      const plateContainer = document.getElementById('licensePlateContainer');
+      const outerGlow = document.getElementById('plateOuterGlow');
+      
+      spinBtn.disabled = true;
+      spinBtn.classList.add('opacity-75');
+      plateContainer.classList.add('slot-rolling');
+      outerGlow.classList.remove('plate-drop-pop');
+
+      let ticks = 0;
+      const maxTicks = 18;
+      const interval = setInterval(() => {
+        ticks++;
+        playTick();
+
+        document.getElementById('plateLetterFirst').textContent = getRandomItem(ALLOWED_LETTERS);
+        document.getElementById('digit1').textContent = Math.floor(Math.random() * 10);
+        document.getElementById('digit2').textContent = Math.floor(Math.random() * 10);
+        document.getElementById('digit3').textContent = Math.floor(Math.random() * 10);
+        document.getElementById('plateLetterSecond').textContent = getRandomItem(ALLOWED_LETTERS);
+        document.getElementById('plateLetterThird').textContent = getRandomItem(ALLOWED_LETTERS);
+
+        if (ticks >= maxTicks) {
+          clearInterval(interval);
+          finishSpin();
+        }
+      }, 50);
+    }
+
+    function finishSpin() {
+      const plateContainer = document.getElementById('licensePlateContainer');
+      plateContainer.classList.remove('slot-rolling');
+
+      // Step 2: Determine winning plate using Luck factor
+      const cand1 = generatePlateCandidate();
+      const cand2 = generatePlateCandidate();
+      const winningPlate = cand1.price >= cand2.price ? cand1 : cand2;
+
+      state.currentPlate = winningPlate;
+      updatePlateUI(winningPlate);
+      playWinSound(winningPlate.rarity);
+
+      // Step 3: Exact balance sync - credit the value of the won plate!
+      // In 5x mode, calculate value for all 5 rolled plates
+      const earnedFromSale = state.isSpin5x 
+        ? Math.round(winningPlate.price * 5) 
+        : winningPlate.price;
+
+      state.balance += earnedFromSale;
+      updateBalanceUI();
+      showBalanceDelta(earnedFromSale, true);
+      playCoin();
+
+      // Step 4: Modest XP award based on rarity (and multiplier in 5x mode)
+      const baseEarnedXp = RARITIES[winningPlate.rarity].xp;
+      const totalEarnedXp = state.isSpin5x ? baseEarnedXp * 5 : baseEarnedXp;
+      addXp(totalEarnedXp);
+
+      showToast(`Выпал: ${winningPlate.l1}${winningPlate.digits}${winningPlate.l2}${winningPlate.l3} · Продано за +${formatMoney(earnedFromSale)} ₽ (+${totalEarnedXp} XP)`);
+
+      state.isRolling = false;
+      const spinBtn = document.getElementById('btnSpin');
+      spinBtn.disabled = false;
+      spinBtn.classList.remove('opacity-75');
+      saveState();
+    }
+
+    function saveCurrentToGarage() {
+      if (!state.currentPlate) {
+        showToast('Сначала сделайте прокрутку!');
+        return;
+      }
+      state.garage.unshift({ ...state.currentPlate, id: Date.now() });
+      document.getElementById('garageCount').textContent = state.garage.length;
+      showToast('Номер сохранён в гараж!');
+      saveState();
+    }
+
+    function renderGarageItems() {
+      const container = document.getElementById('garageListContainer');
+      container.innerHTML = '';
+
+      if (state.garage.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-500">
+            <div class="text-4xl mb-2">🚗</div>
+            <div class="text-sm font-bold">Гараж пока пуст</div>
+            <div class="text-xs text-gray-600 mt-1">Крутите номера и сохраняйте редкие экземпляры</div>
+          </div>
+        `;
+        return;
+      }
+
+      state.garage.forEach((item) => {
+        const rar = RARITIES[item.rarity];
+        const card = document.createElement('div');
+        card.className = 'bg-[#1e252e] border border-[#2b333e] rounded-xl p-3 flex items-center justify-between shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="px-2.5 py-1 bg-white text-black font-black font-plate text-base rounded border border-black leading-none shadow-sm">
+              ${item.l1} ${item.digits} ${item.l2}${item.l3} <span class="border-l border-black pl-1 text-[11px]">${item.region.code}</span>
+            </div>
+            <div>
+              <div class="text-xs font-black" style="color: ${rar.color}">${rar.name}</div>
+              <div class="text-[10px] text-gray-400">${item.region.name}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs font-bold text-accentGreen font-mono">${formatMoney(item.price)} ₽</div>
+            <button onclick="sellGarageItem(${item.id})" class="text-[11px] px-2.5 py-1 bg-green-500/20 text-accentGreen hover:bg-green-500/30 font-bold rounded-lg transition active:scale-95">
+              Продать
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    window.sellGarageItem = function(id) {
+      const idx = state.garage.findIndex(g => g.id === id);
+      if (idx !== -1) {
+        const item = state.garage[idx];
+        state.balance += item.price;
+        state.garage.splice(idx, 1);
+        updateBalanceUI();
+        showBalanceDelta(item.price, true);
+        document.getElementById('garageCount').textContent = state.garage.length;
+        playCoin();
+        renderGarageItems();
+        showToast(`Номер успешно продан за +${formatMoney(item.price)} ₽!`);
+        saveState();
+      }
+    };
+
+    function renderBetModal() {
+      const container = document.getElementById('betOptionsContainer');
+      container.innerHTML = '';
+
+      BET_TIERS.forEach(tier => {
+        const isSelected = tier.id === state.selectedBetId;
+        const tierPrice = state.isSpin5x ? tier.singleCost * 5 : tier.singleCost;
+
+        const row = document.createElement('div');
+        row.className = `p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+          isSelected 
+            ? 'bg-[#1d242d] border-accentGreen shadow-md' 
+            : 'bg-[#191e25] border-[#252c36] hover:border-[#384352]'
+        }`;
+        
+        row.innerHTML = `
+          <div>
+            <div class="text-sm font-extrabold ${tier.color}">${tier.title}</div>
+            <div class="text-xs text-gray-400 mt-0.5">${tier.subtitle}</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-sm font-black text-white font-mono">${formatMoney(tierPrice)} ₽</div>
+            ${isSelected ? `
+              <div class="w-6 h-6 rounded-full bg-accentGreen flex items-center justify-center text-black">
+                <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+            ` : '<div class="w-6 h-6"></div>'}
+          </div>
+        `;
+
+        row.onclick = () => {
+          state.selectedBetId = tier.id;
+          document.getElementById('selectedBetText').textContent = tier.id === 'common' ? 'Ставка ×1' : tier.title;
+          updateSpinButtonUI();
+          renderBetModal();
+          closeModal('betModal');
+          saveState();
+        };
+
+        container.appendChild(row);
+      });
+    }
+
+    function renderCountrySheet() {
+      const grid = document.getElementById('countryGrid');
+      grid.innerHTML = '';
+      COUNTRIES.forEach(c => {
+        const isSelected = state.selectedCountryId === c.id;
+        const btn = document.createElement('button');
+        btn.className = `p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold transition border ${
+          isSelected 
+            ? 'bg-[#262f3a] border-gray-400 text-white shadow-sm' 
+            : 'bg-[#1a2027] border-[#252c35] text-gray-300 hover:text-white'
+        }`;
+        btn.innerHTML = `<span class="text-base">${c.flag}</span><span class="truncate">${c.name}</span>`;
+        btn.onclick = () => {
+          state.selectedCountryId = c.id;
+          document.getElementById('selectedCountryFlag').textContent = c.flag;
+          document.getElementById('selectedCountryText').textContent = `${c.name} · ${c.defRegion}`;
+          renderCountrySheet();
+          saveState();
+        };
+        grid.appendChild(btn);
+      });
+
+      const plateList = document.getElementById('plateTypeList');
+      plateList.innerHTML = '';
+      PLATE_TYPES.forEach(pt => {
+        const isSelected = state.selectedPlateTypeId === pt.id;
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+          isSelected ? 'bg-[#1e252e] border-gray-400' : 'bg-[#151920] border-[#222933]'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="px-2.5 py-1.5 rounded-md font-plate text-xs font-black uppercase shadow-inner border border-black/80 ${pt.styleClass || 'bg-white text-black'}">
+              ${pt.previewText}
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">${pt.name}</div>
+              <div class="text-[10px] text-gray-400">${pt.note ? `${pt.previewText} · ${pt.note}` : pt.previewText}</div>
+            </div>
+          </div>
+          ${isSelected ? `
+            <div class="w-5 h-5 rounded-full bg-accentGreen flex items-center justify-center text-black">
+              <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+          ` : ''}
+        `;
+
+        item.onclick = () => {
+          state.selectedPlateTypeId = pt.id;
+          if (state.currentPlate) {
+            updatePlateUI(state.currentPlate);
+          }
+          renderCountrySheet();
+          closeModal('countryModal');
+          saveState();
+        };
+
+        plateList.appendChild(item);
+      });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function initListeners() {
+      // Modals
+      document.getElementById('btnOpenBetSheet').onclick = () => {
+        renderBetModal();
+        openModal('betModal');
+      };
+      document.getElementById('betModalBackdrop').onclick = () => closeModal('betModal');
+
+      document.getElementById('btnOpenCountrySheet').onclick = () => {
+        renderCountrySheet();
+        openModal('countryModal');
+      };
+      document.getElementById('countryModalBackdrop').onclick = () => closeModal('countryModal');
+
+      document.getElementById('navGarageBtn').onclick = () => {
+        renderGarageItems();
+        openModal('garageModal');
+      };
+      document.getElementById('garageModalBackdrop').onclick = () => closeModal('garageModal');
+      document.getElementById('btnCloseGarage').onclick = () => closeModal('garageModal');
+
+      // Level-up modal dismissal
+      document.getElementById('btnClaimLevelUp').onclick = () => closeModal('levelUpModal');
+      document.getElementById('levelUpBackdrop').onclick = () => closeModal('levelUpModal');
+
+      // Mode Toggle 1x / 5x
+      document.getElementById('btnToggleSpinMode').onclick = () => {
+        state.isSpin5x = !state.isSpin5x;
+        updateSpinButtonUI();
+        if (state.currentPlate) {
+          updatePlateUI(state.currentPlate);
+        }
+        showToast(state.isSpin5x ? 'Режим ×5: 5 номеров + 5x опыт' : 'Режим ×1: Одиночная крутка');
+        saveState();
+      };
+
+      // Spin
+      document.getElementById('btnSpin').onclick = spin;
+
+      // Add to Garage
+      document.getElementById('btnSaveToGarage').onclick = saveCurrentToGarage;
+
+      // Share Button
+      document.getElementById('btnShare').onclick = () => {
+        if (!state.currentPlate) return;
+        const text = `Смотри, какой номер мне выпал: ${state.currentPlate.l1}${state.currentPlate.digits}${state.currentPlate.l2}${state.currentPlate.l3} ${state.currentPlate.region.code} стоимостью ${formatMoney(state.currentPlate.price)} ₽!`;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => showToast('Текст номера скопирован!'));
+        } else {
+          showToast(text);
+        }
+      };
+
+      // Sell All from Garage
+      document.getElementById('btnSellAllGarage').onclick = () => {
+        if (state.garage.length === 0) {
+          showToast('Гараж пуст!');
+          return;
+        }
+        let total = 0;
+        state.garage.forEach(g => total += g.price);
+        state.balance += total;
+        state.garage = [];
+        updateBalanceUI();
+        showBalanceDelta(total, true);
+        document.getElementById('garageCount').textContent = '0';
+        playCoin();
+        renderGarageItems();
+        showToast(`Все номера проданы на +${formatMoney(total)} ₽!`);
+        saveState();
+      };
+
+      document.getElementById('levelPill').onclick = () => {
+        const needed = getXpForLevel(state.level);
+        showToast(`Уровень ${state.level}: ${state.currentXp} из ${needed} XP. Опыт растёт плавно!`);
+      };
+
+      document.getElementById('btnSideMenu').onclick = () => {
+        showToast(`Профиль: Уровень ${state.level} · Баланс: ${formatMoney(state.balance)} ₽`);
+      };
+
+      document.getElementById('cloverBadge').onclick = () => {
+        showToast(`Удача ${state.luck}: выбирает лучший номер из 2 попыток!`);
+      };
+
+      // Reset Progress
+      document.getElementById('btnResetProgress').onclick = () => {
+        if (state.balance > 0) {
+          localStorage.removeItem(STORAGE_KEY);
+          state.level = 1;
+          state.currentXp = 0;
+          state.balance = 100000;
+          state.luck = 33;
+          state.garage = [];
+          updateBalanceUI();
+          updateLevelUI();
+          document.getElementById('garageCount').textContent = '0';
+          showToast('Прогресс сброшен: Баланс 100 000 ₽, Уровень 1!');
+        }
+      };
+    }
+
+    // Countdown Timer for Promo Banner
+    function startCountdown() {
+      let seconds = 20 * 3600 + 51 * 60 + 14;
+      setInterval(() => {
+        seconds--;
+        if (seconds < 0) seconds = 86400;
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        document.getElementById('promoTimer').textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    // Initial Launch
+    window.onload = function() {
+      loadState();
+      initListeners();
+      startCountdown();
+      updateLevelUI();
+      updateBalanceUI();
+
+      // Update Country & Bet header displays from loaded state
+      const curCountry = COUNTRIES.find(c => c.id === state.selectedCountryId) || COUNTRIES[0];
+      document.getElementById('selectedCountryFlag').textContent = curCountry.flag;
+      document.getElementById('selectedCountryText').textContent = `${curCountry.name} · ${curCountry.defRegion}`;
+
+      const curBet = BET_TIERS.find(b => b.id === state.selectedBetId) || BET_TIERS[0];
+      document.getElementById('selectedBetText').textContent = curBet.id === 'common' ? 'Ставка ×1' : curBet.title;
+      document.getElementById('garageCount').textContent = state.garage.length;
+
+      // Authentic Initial Screen Plate matching Screenshot: Е 069 КЕ 77
+      state.currentPlate = {
+        l1: 'Е',
+        d1: '0',
+        d2: '6',
+        d3: '9',
+        l2: 'К',
+        l3: 'Е',
+        digits: '069',
+        letters: 'ЕКЕ',
+        region: { code: '77', name: 'Москва', isCapital: true },
+        rarity: 1, // Необычный
+        price: 2763,
+        modifiers: [
+          { text: '🍀 Удача: лучший из 2 номеров', isAccent: false },
+          { text: 'Столичный регион <span class="font-bold">×1,4</span>', isAccent: true },
+          { text: 'Ноль впереди <span class="font-bold">×2</span>', isAccent: true },
+          { text: 'Палиндром букв <span class="font-bold">×3</span>', isAccent: true }
+        ]
+      };
+
+      updatePlateUI(state.currentPlate);
+      updateSpinButtonUI();
+    };
+  </script>
+</body>
+</html>
