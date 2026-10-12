@@ -470,25 +470,161 @@
        ========================================================= */
     const ALLOWED_LETTERS = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
     
+    // Полный список регионов РФ + режим «Любой регион»
+    // Столичные (Москва/МО), Питер, Екб (Свердловская обл.) и Казань (Татарстан) = 3 000 ₽
+    // Остальные регионы = 2 500 ₽
+    // «Любой регион» = 2 300 ₽
     const REGIONS = [
-      { code: '77', name: 'Москва', isCapital: true, mult: 1.4 },
-      { code: '777', name: 'Москва', isCapital: true, mult: 1.4 },
-      { code: '99', name: 'Москва', isCapital: true, mult: 1.4 },
-      { code: '78', name: 'Санкт-Петербург', isCapital: false, mult: 1.2 },
-      { code: '178', name: 'Санкт-Петербург', isCapital: false, mult: 1.2 },
-      { code: '16', name: 'Татарстан', isCapital: false, mult: 1.0 },
-      { code: '23', name: 'Краснодарский край', isCapital: false, mult: 1.0 },
-      { code: '66', name: 'Свердловская обл.', isCapital: false, mult: 1.0 }
+      { code: 'RANDOM', name: 'Любой регион (случайный)', isRandom: true, cost: 2300, mult: 1.0, badge: 'Скидка 2 300 ₽' },
+      
+      // Топовые регионы (3 000 ₽)
+      { code: '77', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '777', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '99', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '97', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '177', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '197', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '199', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '797', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '799', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+      { code: '50', name: 'Московская обл.', isCapital: true, isTop: true, cost: 3000, mult: 1.3 },
+      { code: '90', name: 'Московская обл.', isCapital: true, isTop: true, cost: 3000, mult: 1.3 },
+      { code: '150', name: 'Московская обл.', isCapital: true, isTop: true, cost: 3000, mult: 1.3 },
+      { code: '190', name: 'Московская обл.', isCapital: true, isTop: true, cost: 3000, mult: 1.3 },
+      { code: '750', name: 'Московская обл.', isCapital: true, isTop: true, cost: 3000, mult: 1.3 },
+      { code: '78', name: 'Санкт-Петербург', isTop: true, cost: 3000, mult: 1.3 },
+      { code: '98', name: 'Санкт-Петербург', isTop: true, cost: 3000, mult: 1.3 },
+      { code: '178', name: 'Санкт-Петербург', isTop: true, cost: 3000, mult: 1.3 },
+      { code: '198', name: 'Санкт-Петербург', isTop: true, cost: 3000, mult: 1.3 },
+      { code: '16', name: 'Татарстан (Казань)', isTop: true, cost: 3000, mult: 1.25 },
+      { code: '116', name: 'Татарстан (Казань)', isTop: true, cost: 3000, mult: 1.25 },
+      { code: '716', name: 'Татарстан (Казань)', isTop: true, cost: 3000, mult: 1.25 },
+      { code: '66', name: 'Свердловская обл. (Екб)', isTop: true, cost: 3000, mult: 1.25 },
+      { code: '96', name: 'Свердловская обл. (Екб)', isTop: true, cost: 3000, mult: 1.25 },
+      { code: '196', name: 'Свердловская обл. (Екб)', isTop: true, cost: 3000, mult: 1.25 },
+
+      // Все остальные субъекты и регионы РФ (2 500 ₽)
+      { code: '01', name: 'Адыгея', cost: 2500, mult: 1.0 },
+      { code: '02', name: 'Башкортостан', cost: 2500, mult: 1.0 },
+      { code: '102', name: 'Башкортостан', cost: 2500, mult: 1.0 },
+      { code: '03', name: 'Бурятия', cost: 2500, mult: 1.0 },
+      { code: '04', name: 'Республика Алтай', cost: 2500, mult: 1.0 },
+      { code: '05', name: 'Дагестан', cost: 2500, mult: 1.0 },
+      { code: '06', name: 'Ингушетия', cost: 2500, mult: 1.0 },
+      { code: '07', name: 'Кабардино-Балкария', cost: 2500, mult: 1.0 },
+      { code: '08', name: 'Калмыкия', cost: 2500, mult: 1.0 },
+      { code: '09', name: 'Карачаево-Черкесия', cost: 2500, mult: 1.0 },
+      { code: '10', name: 'Карелия', cost: 2500, mult: 1.0 },
+      { code: '11', name: 'Республика Коми', cost: 2500, mult: 1.0 },
+      { code: '12', name: 'Марий Эл', cost: 2500, mult: 1.0 },
+      { code: '13', name: 'Мордовия', cost: 2500, mult: 1.0 },
+      { code: '14', name: 'Якутия (Саха)', cost: 2500, mult: 1.0 },
+      { code: '15', name: 'Северная Осетия', cost: 2500, mult: 1.0 },
+      { code: '17', name: 'Тыва', cost: 2500, mult: 1.0 },
+      { code: '18', name: 'Удмуртия', cost: 2500, mult: 1.0 },
+      { code: '19', name: 'Хакасия', cost: 2500, mult: 1.0 },
+      { code: '21', name: 'Чувашия', cost: 2500, mult: 1.0 },
+      { code: '22', name: 'Алтайский край', cost: 2500, mult: 1.0 },
+      { code: '23', name: 'Краснодарский край', cost: 2500, mult: 1.15 },
+      { code: '93', name: 'Краснодарский край', cost: 2500, mult: 1.15 },
+      { code: '123', name: 'Краснодарский край', cost: 2500, mult: 1.15 },
+      { code: '193', name: 'Краснодарский край', cost: 2500, mult: 1.15 },
+      { code: '24', name: 'Красноярский край', cost: 2500, mult: 1.0 },
+      { code: '124', name: 'Красноярский край', cost: 2500, mult: 1.0 },
+      { code: '25', name: 'Приморский край', cost: 2500, mult: 1.1 },
+      { code: '125', name: 'Приморский край', cost: 2500, mult: 1.1 },
+      { code: '26', name: 'Ставропольский край', cost: 2500, mult: 1.0 },
+      { code: '126', name: 'Ставропольский край', cost: 2500, mult: 1.0 },
+      { code: '27', name: 'Хабаровский край', cost: 2500, mult: 1.0 },
+      { code: '28', name: 'Амурская обл.', cost: 2500, mult: 1.0 },
+      { code: '29', name: 'Архангельская обл.', cost: 2500, mult: 1.0 },
+      { code: '30', name: 'Астраханская обл.', cost: 2500, mult: 1.0 },
+      { code: '31', name: 'Белгородская обл.', cost: 2500, mult: 1.0 },
+      { code: '32', name: 'Брянская обл.', cost: 2500, mult: 1.0 },
+      { code: '33', name: 'Владимирская обл.', cost: 2500, mult: 1.0 },
+      { code: '34', name: 'Волгоградская обл.', cost: 2500, mult: 1.0 },
+      { code: '134', name: 'Волгоградская обл.', cost: 2500, mult: 1.0 },
+      { code: '35', name: 'Вологодская обл.', cost: 2500, mult: 1.0 },
+      { code: '36', name: 'Воронежская обл.', cost: 2500, mult: 1.0 },
+      { code: '136', name: 'Воронежская обл.', cost: 2500, mult: 1.0 },
+      { code: '37', name: 'Ивановская обл.', cost: 2500, mult: 1.0 },
+      { code: '38', name: 'Иркутская обл.', cost: 2500, mult: 1.0 },
+      { code: '138', name: 'Иркутская обл.', cost: 2500, mult: 1.0 },
+      { code: '39', name: 'Калининградская обл.', cost: 2500, mult: 1.05 },
+      { code: '40', name: 'Калужская обл.', cost: 2500, mult: 1.0 },
+      { code: '41', name: 'Камчатский край', cost: 2500, mult: 1.0 },
+      { code: '42', name: 'Кемеровская обл. (Кузбасс)', cost: 2500, mult: 1.0 },
+      { code: '142', name: 'Кемеровская обл.', cost: 2500, mult: 1.0 },
+      { code: '43', name: 'Кировская обл.', cost: 2500, mult: 1.0 },
+      { code: '44', name: 'Костромская обл.', cost: 2500, mult: 1.0 },
+      { code: '45', name: 'Курганская обл.', cost: 2500, mult: 1.0 },
+      { code: '46', name: 'Курская обл.', cost: 2500, mult: 1.0 },
+      { code: '47', name: 'Ленинградская обл.', cost: 2500, mult: 1.1 },
+      { code: '147', name: 'Ленинградская обл.', cost: 2500, mult: 1.1 },
+      { code: '48', name: 'Липецкая обл.', cost: 2500, mult: 1.0 },
+      { code: '49', name: 'Магаданская обл.', cost: 2500, mult: 1.0 },
+      { code: '51', name: 'Мурманская обл.', cost: 2500, mult: 1.0 },
+      { code: '52', name: 'Нижегородская обл.', cost: 2500, mult: 1.05 },
+      { code: '152', name: 'Нижегородская обл.', cost: 2500, mult: 1.05 },
+      { code: '53', name: 'Новгородская обл.', cost: 2500, mult: 1.0 },
+      { code: '54', name: 'Новосибирская обл.', cost: 2500, mult: 1.05 },
+      { code: '154', name: 'Новосибирская обл.', cost: 2500, mult: 1.05 },
+      { code: '55', name: 'Омская обл.', cost: 2500, mult: 1.0 },
+      { code: '56', name: 'Оренбургская обл.', cost: 2500, mult: 1.0 },
+      { code: '57', name: 'Орловская обл.', cost: 2500, mult: 1.0 },
+      { code: '58', name: 'Пензенская обл.', cost: 2500, mult: 1.0 },
+      { code: '59', name: 'Пермский край', cost: 2500, mult: 1.0 },
+      { code: '159', name: 'Пермский край', cost: 2500, mult: 1.0 },
+      { code: '60', name: 'Псковская обл.', cost: 2500, mult: 1.0 },
+      { code: '61', name: 'Ростовская обл.', cost: 2500, mult: 1.05 },
+      { code: '161', name: 'Ростовская обл.', cost: 2500, mult: 1.05 },
+      { code: '62', name: 'Рязанская обл.', cost: 2500, mult: 1.0 },
+      { code: '63', name: 'Самарская обл.', cost: 2500, mult: 1.05 },
+      { code: '163', name: 'Самарская обл.', cost: 2500, mult: 1.05 },
+      { code: '64', name: 'Саратовская обл.', cost: 2500, mult: 1.0 },
+      { code: '65', name: 'Сахалинская обл.', cost: 2500, mult: 1.0 },
+      { code: '67', name: 'Смоленская обл.', cost: 2500, mult: 1.0 },
+      { code: '68', name: 'Тамбовская обл.', cost: 2500, mult: 1.0 },
+      { code: '69', name: 'Тверская обл.', cost: 2500, mult: 1.0 },
+      { code: '70', name: 'Томская обл.', cost: 2500, mult: 1.0 },
+      { code: '71', name: 'Тульская обл.', cost: 2500, mult: 1.0 },
+      { code: '72', name: 'Тюменская обл.', cost: 2500, mult: 1.05 },
+      { code: '73', name: 'Ульяновская обл.', cost: 2500, mult: 1.0 },
+      { code: '74', name: 'Челябинская обл.', cost: 2500, mult: 1.05 },
+      { code: '174', name: 'Челябинская обл.', cost: 2500, mult: 1.05 },
+      { code: '75', name: 'Забайкальский край', cost: 2500, mult: 1.0 },
+      { code: '76', name: 'Ярославская обл.', cost: 2500, mult: 1.0 },
+      { code: '79', name: 'Еврейская АО', cost: 2500, mult: 1.0 },
+      { code: '82', name: 'Крым', cost: 2500, mult: 1.05 },
+      { code: '83', name: 'Ненецкий АО', cost: 2500, mult: 1.0 },
+      { code: '86', name: 'ХМАО — Югра', cost: 2500, mult: 1.05 },
+      { code: '186', name: 'ХМАО — Югра', cost: 2500, mult: 1.05 },
+      { code: '87', name: 'Чукотский АО', cost: 2500, mult: 1.0 },
+      { code: '89', name: 'ЯНАО', cost: 2500, mult: 1.05 },
+      { code: '92', name: 'Севастополь', cost: 2500, mult: 1.05 },
+      { code: '95', name: 'Чеченская Республика', cost: 2500, mult: 1.1 }
     ];
 
-    // Точные ставки круток по ТЗ
+    // Базовые коэффициенты ставок относительно выбранного региона:
+    // Обычная крутка = базовая стоимость региона (2 300 / 2 500 / 3 000 ₽)
+    // Остальные тиры масштабируются согласно правилам ТЗ
     const BET_TIERS = [
-      { id: 'common', title: 'Обычная крутка', subtitle: 'любой номер', singleCost: 2500, minRarity: 0, color: 'text-white' },
-      { id: 'uncommon', title: 'Необычный и выше', subtitle: 'гарантия редкости', singleCost: 11000, minRarity: 1, color: 'text-[#22c55e]' },
-      { id: 'rare', title: 'Редкий и выше', subtitle: 'гарантия редкости', singleCost: 60000, minRarity: 2, color: 'text-[#0a84ff]' },
-      { id: 'epic', title: 'Эпический и выше', subtitle: 'гарантия редкости', singleCost: 250000, minRarity: 3, color: 'text-[#bf5af2]' },
-      { id: 'legendary', title: 'Легендарный', subtitle: 'гарантия редкости', singleCost: 1000000, minRarity: 4, color: 'text-[#ffd60a]' }
+      { id: 'common', title: 'Обычная крутка', subtitle: 'любой номер', mult: 1, fixedCost: null, minRarity: 0, color: 'text-white' },
+      { id: 'uncommon', title: 'Необычный и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 11000, minRarity: 1, color: 'text-[#22c55e]' },
+      { id: 'rare', title: 'Редкий и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 60000, minRarity: 2, color: 'text-[#0a84ff]' },
+      { id: 'epic', title: 'Эпический и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 250000, minRarity: 3, color: 'text-[#bf5af2]' },
+      { id: 'legendary', title: 'Легендарный', subtitle: 'гарантия редкости', mult: null, fixedCost: 1000000, minRarity: 4, color: 'text-[#ffd60a]' }
     ];
+
+    // Расчет стоимости ставки с учетом региона
+    function getBetSingleCost(betTierId) {
+      const selectedReg = REGIONS[state.currentRegionIndex] || REGIONS[0];
+      const tier = BET_TIERS.find(b => b.id === betTierId) || BET_TIERS[0];
+      if (tier.id === 'common') {
+        return selectedReg.cost;
+      }
+      return tier.fixedCost;
+    }
 
     // Расшифровки элитных ведомственных серий
     const VIP_SERIES = {
@@ -500,18 +636,18 @@
       'ООО': { name: 'ФСБ / Госструктуры', mult: 2.0 }
     };
 
-    // Диапазоны цен по редкостям согласно ТЗ:
-    // Обычный: 20 – 1 500 ₽
-    // Необычный: 1 500 – 20 000 ₽
-    // Редкий: 20 000 – 85 000 ₽
-    // Эпический: 85 000 – 400 000 ₽
-    // Легендарный: 400 000 – 2 300 000 ₽
+    // Диапазоны цен по редкостям согласно сбалансированной экономике:
+    // Обычный: 20 – 1 500 ₽ (при ставке 2 500 ₽)
+    // Необычный: 1 500 – 18 000 ₽ (при ставке 11 000 ₽)
+    // Редкий: 18 000 – 75 000 ₽ (при ставке 60 000 ₽)
+    // Эпический: 75 000 – 350 000 ₽ (при ставке 250 000 ₽)
+    // Легендарный: 400 000 – 3 000 000 ₽ (строгий потолок 3 000 000 ₽)
     const RARITY_INFO = [
       { name: 'Обычный', color: '#8e8e93', glow: 'glow-rarity-0', bars: 1, xp: 2, minPrice: 20, maxPrice: 1500 },
-      { name: 'Необычный', color: '#22c55e', glow: 'glow-rarity-1', bars: 3, xp: 5, minPrice: 1500, maxPrice: 20000 },
-      { name: 'Редкий', color: '#0a84ff', glow: 'glow-rarity-2', bars: 5, xp: 20, minPrice: 20000, maxPrice: 85000 },
-      { name: 'Эпический', color: '#bf5af2', glow: 'glow-rarity-3', bars: 8, xp: 80, minPrice: 85000, maxPrice: 400000 },
-      { name: 'Легендарный', color: '#ffd60a', glow: 'glow-rarity-4', bars: 10, xp: 300, minPrice: 400000, maxPrice: 2300000 }
+      { name: 'Необычный', color: '#22c55e', glow: 'glow-rarity-1', bars: 3, xp: 5, minPrice: 1500, maxPrice: 18000 },
+      { name: 'Редкий', color: '#0a84ff', glow: 'glow-rarity-2', bars: 5, xp: 20, minPrice: 18000, maxPrice: 75000 },
+      { name: 'Эпический', color: '#bf5af2', glow: 'glow-rarity-3', bars: 8, xp: 80, minPrice: 75000, maxPrice: 350000 },
+      { name: 'Легендарный', color: '#ffd60a', glow: 'glow-rarity-4', bars: 10, xp: 300, minPrice: 400000, maxPrice: 3000000 }
     ];
 
     let state = {
@@ -622,7 +758,14 @@
 
     function generatePlateWithDynamicModifiers(betTierId = 'common') {
       const isSuperLuck = (state.clovers === 1);
-      const regionObj = REGIONS[state.currentRegionIndex] || REGIONS[0];
+      let selectedReg = REGIONS[state.currentRegionIndex] || REGIONS[0];
+      
+      // Если выбран режим «Любой регион (случайный)», выбираем случайный субъект из списка (кроме нулевого)
+      let regionObj = selectedReg;
+      if (selectedReg.isRandom) {
+        const nonRandomList = REGIONS.filter(r => !r.isRandom);
+        regionObj = getRandomItem(nonRandomList);
+      }
       
       let l1 = getRandomItem(ALLOWED_LETTERS);
       let l2 = getRandomItem(ALLOWED_LETTERS);
@@ -797,31 +940,84 @@
       let minP = info.minPrice;
       let maxP = info.maxPrice;
 
-      // Правило: при эпической ставке легендарные номера стоят не дороже 1 000 000 ₽
-      if (betTierId === 'epic' && determinedRarity === 4) {
-        maxP = 1000000;
+      // 1. Обычная ставка (2 500 ₽): в большинстве случаев даёт 150 - 1 100 ₽, 
+      // окупаемость (необычный/редкий) случается дозированно, не на каждом шагу
+      if (betTierId === 'common' && determinedRarity === 0) {
+        // Смещение распределения к нижнему и среднему чеку для плавного прогресса
+        const weightedRoll = Math.pow(Math.random(), 1.6);
+        minP = 50;
+        maxP = 1350;
       }
 
-      // Правило: при легендарной ставке номер окупается раз в 1-5 прокрутов (шанс ~28% цена от 1 000 000 до 2 300 000 ₽)
-      if (betTierId === 'legendary') {
-        const isProfitRoll = Math.random() < 0.28; // окупаемость 1 раз за 3-4 крутки (в среднем 1-5)
-        if (isProfitRoll) {
-          minP = 1000001;
-          maxP = 2300000;
+      // 2. Необычная ставка (11 000 ₽): чаще даёт 3 500 – 9 500 ₽, окупается крупным выигрышем (12 000 - 18 000 ₽) примерно 1 раз из 3-4
+      if (betTierId === 'uncommon' && determinedRarity === 1) {
+        const isProfitableUncommon = Math.random() < 0.28;
+        if (isProfitableUncommon) {
+          minP = 11500;
+          maxP = 18000;
         } else {
-          minP = 400000;
-          maxP = 985000;
+          minP = 2200;
+          maxP = 9800;
         }
       }
 
-      // Генерация цены в строгом диапазоне
+      // 3. Редкая ставка (60 000 ₽): чаще даёт 22 000 – 52 000 ₽, окупается (65 000 - 75 000 ₽ или выпадением эпика) раз в 3-4 прокрута
+      if (betTierId === 'rare' && determinedRarity === 2) {
+        const isProfitableRare = Math.random() < 0.26;
+        if (isProfitableRare) {
+          minP = 62000;
+          maxP = 75000;
+        } else {
+          minP = 18500;
+          maxP = 54000;
+        }
+      }
+
+      // 4. Эпическая ставка (250 000 ₽): 
+      // чаще даёт 110 000 – 220 000 ₽, окупается (270 000 - 350 000 ₽) раз в 3-4 прокрута;
+      // если выпала легендарка — она строго не дороже 1 000 000 ₽
+      if (betTierId === 'epic') {
+        if (determinedRarity === 4) {
+          minP = 400000;
+          maxP = 1000000; // строгий потолок 1 млн при эпической ставке
+        } else {
+          const isProfitableEpic = Math.random() < 0.25;
+          if (isProfitableEpic) {
+            minP = 260000;
+            maxP = 350000;
+          } else {
+            minP = 90000;
+            maxP = 225000;
+          }
+        }
+      }
+
+      // 5. Легендарная ставка (1 000 000 ₽):
+      // Окупается раз в 1-5 прокрутов (шанс 25%), при этом максимальная цена СТРОГО до 3 000 000 ₽
+      if (betTierId === 'legendary') {
+        const isProfitRoll = Math.random() < 0.25; // окупаемость 1 раз за 4 прокрутки в среднем
+        if (isProfitRoll) {
+          minP = 1050000;
+          maxP = 3000000; // строгий абсолютный потолок 3 000 000 ₽
+        } else {
+          minP = 420000;
+          maxP = 940000; // минус по крутке, сдерживающий мгновенное обогащение
+        }
+      }
+
+      // Расчёт цены с плавным случайным распределением
       const normalizedVariance = Math.random();
       let finalPrice = Math.round(minP + (maxP - minP) * normalizedVariance);
 
-      // БОНУС СУПЕР-УДАЧИ (х5 выигрыш на последнем 1 клевере)
+      // БОНУС СУПЕР-УДАЧИ (на последнем 1 клевере выигрыш ×5, но не выше абсолютного лимита 3 000 000 ₽)
       if (isSuperLuck) {
         finalPrice = Math.round(finalPrice * 5);
         modifiers.unshift({ text: `⚡ Супер-Удача: бонус <span class="font-bold text-amber-300">×5</span> к выигрышу!`, isAccent: true });
+      }
+
+      // Жёсткий лимит: ни один номер не может стоить дороже 3 000 000 ₽
+      if (finalPrice > 3000000) {
+        finalPrice = 3000000;
       }
 
       return {
@@ -868,14 +1064,19 @@
 
       // Кнопка крутки
       const bet = BET_TIERS.find(b => b.id === state.selectedBetId) || BET_TIERS[0];
-      const totalCost = state.isSpin5x ? bet.singleCost * 5 : bet.singleCost;
+      const singleCost = getBetSingleCost(state.selectedBetId);
+      const totalCost = state.isSpin5x ? singleCost * 5 : singleCost;
       document.getElementById('spinButtonText').textContent = state.isSpin5x ? 'Крутить ещё ×5' : 'Крутить';
       document.getElementById('spinButtonPrice').textContent = `${fmt(totalCost)} ₽`;
       document.getElementById('btnToggleSpinMode').textContent = state.isSpin5x ? '5×' : '1×';
       document.getElementById('selectedBetText').textContent = bet.title;
 
       const reg = REGIONS[state.currentRegionIndex] || REGIONS[0];
-      document.getElementById('selectedCountryText').textContent = `Россия · ${reg.code}`;
+      if (reg.isRandom) {
+        document.getElementById('selectedCountryText').textContent = `🇷🇺 Любой регион (2 300 ₽)`;
+      } else {
+        document.getElementById('selectedCountryText').textContent = `Россия · ${reg.code}`;
+      }
 
       // Гараж бейдж
       const gBadge = document.getElementById('garageCountBadge');
@@ -987,9 +1188,11 @@
       while (state.currentXp >= needed) {
         state.currentXp -= needed;
         state.level += 1;
-        state.balance += 20000 * state.level;
+        // Сбалансированная выплата за новый уровень (чтобы не перенасыщать баланс)
+        const levelBonus = 5000 * state.level;
+        state.balance += levelBonus;
         needed = state.level * 500;
-        showToast(`🎉 НОВЫЙ УРОВЕНЬ ${state.level}! Премия +${fmt(20000 * state.level)} ₽`);
+        showToast(`🎉 НОВЫЙ УРОВЕНЬ ${state.level}! Премия +${fmt(levelBonus)} ₽`);
         playBeep("G5");
       }
     }
@@ -1001,8 +1204,8 @@
       if (state.isRolling) return;
       initAudio();
 
-      const bet = BET_TIERS.find(b => b.id === state.selectedBetId) || BET_TIERS[0];
-      const spinCost = state.isSpin5x ? bet.singleCost * 5 : bet.singleCost;
+      const singleCost = getBetSingleCost(state.selectedBetId);
+      const spinCost = state.isSpin5x ? singleCost * 5 : singleCost;
 
       if (state.balance < spinCost) {
         showToast('Недостаточно рублей на балансе!');
@@ -1043,6 +1246,8 @@
       spinBtn.classList.add('opacity-75');
       plateContainer.classList.add('slot-rolling');
 
+      const currentBet = BET_TIERS.find(b => b.id === state.selectedBetId) || BET_TIERS[0];
+
       // Анимация барабана
       let ticks = 0;
       const interval = setInterval(() => {
@@ -1057,7 +1262,7 @@
 
         if (ticks >= 14) {
           clearInterval(interval);
-          finishSpin(bet.minRarity);
+          finishSpin(currentBet.minRarity);
         }
       }, 45);
     }
@@ -1284,7 +1489,8 @@
       container.innerHTML = '';
       BET_TIERS.forEach(tier => {
         const isSel = tier.id === state.selectedBetId;
-        const cost = state.isSpin5x ? tier.singleCost * 5 : tier.singleCost;
+        const singleCost = getBetSingleCost(tier.id);
+        const cost = state.isSpin5x ? singleCost * 5 : singleCost;
         const row = document.createElement('div');
         row.className = `p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${isSel ? 'bg-[#2c2c2e] border-[#22c55e]' : 'bg-[#242426] border-[#3a3a3c]'}`;
         row.innerHTML = `
@@ -1304,22 +1510,65 @@
       });
     }
 
+    let regionSearchQuery = '';
+
     function renderCountryModal() {
       const list = document.getElementById('countryOptionsList');
       list.innerHTML = '';
-      REGIONS.forEach((reg, idx) => {
+
+      // Добавим поле быстрого поиска по регионам в шапку модалки
+      let searchInput = document.getElementById('regionSearchInput');
+      if (!searchInput) {
+        const searchWrapper = document.createElement('div');
+        searchWrapper.className = 'mb-2 relative';
+        searchWrapper.innerHTML = `
+          <input id="regionSearchInput" type="text" placeholder="Поиск по коду или городу..." value="${regionSearchQuery}" 
+            class="w-full bg-[#141416] border border-[#2c2c2e] focus:border-[#22c55e] text-white text-xs rounded-xl px-3.5 py-2.5 outline-none placeholder:text-[#8e8e93]">
+        `;
+        list.parentElement.insertBefore(searchWrapper, list);
+        searchInput = document.getElementById('regionSearchInput');
+        searchInput.addEventListener('input', (e) => {
+          regionSearchQuery = e.target.value.toLowerCase().trim();
+          renderCountryModal();
+        });
+      }
+
+      const filtered = REGIONS.map((reg, idx) => ({ reg, idx })).filter(({ reg }) => {
+        if (!regionSearchQuery) return true;
+        return reg.code.toLowerCase().includes(regionSearchQuery) || reg.name.toLowerCase().includes(regionSearchQuery);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-xs text-[#8e8e93]">Регион не найден</div>`;
+        return;
+      }
+
+      filtered.forEach(({ reg, idx }) => {
         const isSel = idx === state.currentRegionIndex;
         const item = document.createElement('div');
         item.className = `p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${isSel ? 'bg-[#2c2c2e] border-[#22c55e]' : 'bg-[#242426] border-[#3a3a3c]'}`;
+        
+        let priceBadge = `<span class="text-xs font-mono font-bold text-[#8e8e93]">${fmt(reg.cost)} ₽</span>`;
+        if (reg.isRandom) {
+          priceBadge = `<span class="text-xs font-mono font-black text-[#22c55e]">2 300 ₽ (Выгода)</span>`;
+        } else if (reg.isTop) {
+          priceBadge = `<span class="text-xs font-mono font-bold text-amber-400">3 000 ₽ (Топ)</span>`;
+        }
+
         item.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <span class="text-lg">🇷🇺</span>
-            <div>
-              <div class="text-xs font-bold text-white">Регион ${reg.code} · ${reg.name}</div>
-              <div class="text-[10px] text-[#8e8e93]">${reg.isCapital ? 'Столичный регион (множитель ×1,4)' : 'Стандартный регион'}</div>
+          <div class="flex items-center gap-2.5 truncate">
+            <span class="text-lg">${reg.isRandom ? '🎲' : '🇷🇺'}</span>
+            <div class="truncate">
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>${reg.isRandom ? reg.name : `Регион ${reg.code} · ${reg.name}`}</span>
+              </div>
+              <div class="text-[10px] text-[#8e8e93]">${reg.isRandom ? 'Случайный регион при каждой крутке' : (reg.isTop ? 'Столичный / Топ регион (множитель повышен)' : 'Стандартный регион')}</div>
             </div>
           </div>
-          ${isSel ? '<i data-lucide="check" class="w-4 h-4 text-[#22c55e]"></i>' : ''}
+          <div class="flex items-center gap-2 shrink-0 ml-2">
+            ${priceBadge}
+            ${isSel ? '<i data-lucide="check" class="w-4 h-4 text-[#22c55e]"></i>' : ''}
+          </div>
         `;
         item.onclick = () => {
           state.currentRegionIndex = idx;
@@ -1339,10 +1588,11 @@
     }
 
     function addShopBonus() {
-      state.balance += 50000;
-      showBalanceDelta(50000, true);
+      // Снижен магазинный бонус с 50 000 до 15 000 ₽ для поддержания баланса экономики
+      state.balance += 15000;
+      showBalanceDelta(15000, true);
       playCoin();
-      showToast('Начислен бонус из магазина +50 000 ₽!');
+      showToast('Начислен бонус из магазина +15 000 ₽!');
       updateUI();
       saveState();
     }
