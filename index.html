@@ -200,174 +200,350 @@
     <!-- ВКЛАДКИ: Номера / Машины / Магазин -->
     <div class="px-4 pt-2.5 flex items-center gap-2">
       <div class="flex-1 bg-[#1c1c1e] p-1 rounded-2xl flex border border-[#2c2c2e]">
-        <button class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-[#3a3a3c] text-white shadow">Номера</button>
-        <button onclick="showToast('Раздел «Машины» откроется на 5 уровне')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-[#8e8e93] hover:text-white transition">Машины</button>
+        <button id="tabBtnPlates" onclick="switchAppTab('plates')" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-[#3a3a3c] text-white shadow transition">Номера</button>
+        <button id="tabBtnCars" onclick="switchAppTab('cars')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-[#8e8e93] hover:text-white transition">Машины</button>
       </div>
       <button onclick="addShopBonus()" class="bg-[#ffd60a] text-black text-xs font-black px-3.5 py-2 rounded-2xl flex items-center gap-1 shadow-lg active:scale-95 transition">
         <i data-lucide="star" class="w-3.5 h-3.5 fill-black"></i> Магазин
       </button>
     </div>
 
-    <!-- Оповещение супер-удачи на 1 клевере -->
-    <div id="superLuckBanner" class="px-4 pt-2 hidden">
-      <div class="bg-[#2c2409] border-2 border-[#ffd60a] rounded-2xl p-2.5 flex items-center gap-2.5 shadow-[0_0_25px_rgba(255,214,10,0.35)] animate-pulse">
-        <div class="text-2xl">⚡</div>
-        <div class="flex-1">
-          <div class="text-xs font-black text-[#ffd60a] uppercase tracking-wide">Супер-Удача на последнем клевере!</div>
-          <div class="text-[11px] text-yellow-100 font-medium">Выигрыш ×5 и высокий шанс на спецсерии!</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ЦЕНТРАЛЬНАЯ ИГРОВАЯ ОБЛАСТЬ С ИЗУМРУДНОЙ АУРОЙ -->
-    <main class="flex-1 px-4 py-3 flex flex-col justify-center relative">
-      <div class="plate-ambient-glow"></div>
-      
-      <!-- Шапка редкости и цены -->
-      <div class="flex items-center justify-between mb-2 px-1 relative z-10">
-        <div>
-          <div id="rarityName" class="text-sm font-extrabold text-[#22c55e] flex items-center gap-1.5">
-            <span>Необычный</span>
-            <span id="rarityXpBadge" class="text-[10px] bg-[#22c55e]/15 text-[#22c55e] px-1.5 py-0.5 rounded font-mono font-bold">+5 XP</span>
+    <!-- РАЗДЕЛ 1: НОМЕРА (ПРОКРУТКА) -->
+    <div id="sectionPlatesView" class="flex-1 flex flex-col justify-between">
+      <!-- Оповещение супер-удачи на 1 клевере -->
+      <div id="superLuckBanner" class="px-4 pt-2 hidden">
+        <div class="bg-[#2c2409] border-2 border-[#ffd60a] rounded-2xl p-2.5 flex items-center gap-2.5 shadow-[0_0_25px_rgba(255,214,10,0.35)] animate-pulse">
+          <div class="text-2xl">⚡</div>
+          <div class="flex-1">
+            <div class="text-xs font-black text-[#ffd60a] uppercase tracking-wide">Супер-Удача на последнем клевере!</div>
+            <div class="text-[11px] text-yellow-100 font-medium">Выигрыш ×5 и высокий шанс на спецсерии!</div>
           </div>
-          <div class="flex items-center gap-1 mt-1.5" id="rarityBars">
-            <!-- 10 сегментов шкалы -->
-          </div>
-        </div>
-        <div class="text-right">
-          <div id="platePrice" class="text-xl font-black text-[#22c55e] tracking-tight font-mono">2 763 ₽</div>
         </div>
       </div>
 
-      <!-- Аутентичный ГОСТ Р 50577 License Plate -->
-      <div class="relative py-1.5 flex items-center justify-center z-10">
-        <div id="plateOuterGlow" class="plate-outer-frame w-full glow-rarity-1">
-          <div id="licensePlateContainer" class="plate-body">
-            
-            <!-- Основная секция: Буква + 3 Цифры + 2 Буквы -->
-            <div class="flex-1 flex items-center justify-between px-3.5 py-1 border-r-[3.5px] border-black relative overflow-hidden bg-inherit">
-              <div class="w-[18%] flex justify-center items-center">
-                <span id="plateLetterFirst" class="gost-char gost-letter">Е</span>
-              </div>
-              <div id="plateDigitsGroup" class="w-[52%] flex items-center justify-center gap-0.5">
-                <span id="digit1" class="gost-char gost-digit">0</span>
-                <span id="digit2" class="gost-char gost-digit">6</span>
-                <span id="digit3" class="gost-char gost-digit">9</span>
-              </div>
-              <div class="w-[30%] flex items-center justify-center gap-0.5">
-                <span id="plateLetterSecond" class="gost-char gost-letter">К</span>
-                <span id="plateLetterThird" class="gost-char gost-letter">Е</span>
-              </div>
+      <!-- ЦЕНТРАЛЬНАЯ ИГРОВАЯ ОБЛАСТЬ С ИЗУМРУДНОЙ АУРОЙ -->
+      <main class="flex-1 px-4 py-3 flex flex-col justify-center relative">
+        <div class="plate-ambient-glow"></div>
+        
+        <!-- Шапка редкости и цены -->
+        <div class="flex items-center justify-between mb-2 px-1 relative z-10">
+          <div>
+            <div id="rarityName" class="text-sm font-extrabold text-[#22c55e] flex items-center gap-1.5">
+              <span>Необычный</span>
+              <span id="rarityXpBadge" class="text-[10px] bg-[#22c55e]/15 text-[#22c55e] px-1.5 py-0.5 rounded font-mono font-bold">+5 XP</span>
             </div>
+            <div class="flex items-center gap-1 mt-1.5" id="rarityBars">
+              <!-- 10 сегментов шкалы -->
+            </div>
+          </div>
+          <div class="text-right">
+            <div id="platePrice" class="text-xl font-black text-[#22c55e] tracking-tight font-mono">2 763 ₽</div>
+          </div>
+        </div>
 
-            <!-- Правая секция: Регион + RUS + Триколор -->
-            <div class="w-[90px] shrink-0 flex flex-col items-center justify-between py-1.5 px-1 bg-inherit">
-              <div id="plateRegion" class="gost-char gost-region mt-0.5">77</div>
-              <div class="flex items-center gap-1.5 pb-0.5">
-                <span class="font-black text-[13px] leading-none text-current tracking-tight font-sans">RUS</span>
-                <div class="w-[22px] h-[14px] border-[1.2px] border-black/80 flex flex-col rounded-[1px] overflow-hidden shadow-sm">
-                  <div class="h-1/3 bg-white"></div>
-                  <div class="h-1/3 bg-[#0039A6]"></div>
-                  <div class="h-1/3 bg-[#D52B1E]"></div>
+        <!-- Аутентичный ГОСТ Р 50577 License Plate -->
+        <div class="relative py-1.5 flex items-center justify-center z-10">
+          <div id="plateOuterGlow" class="plate-outer-frame w-full glow-rarity-1">
+            <div id="licensePlateContainer" class="plate-body">
+              
+              <!-- Основная секция: Буква + 3 Цифры + 2 Буквы -->
+              <div class="flex-1 flex items-center justify-between px-3.5 py-1 border-r-[3.5px] border-black relative overflow-hidden bg-inherit">
+                <div class="w-[18%] flex justify-center items-center">
+                  <span id="plateLetterFirst" class="gost-char gost-letter">Е</span>
+                </div>
+                <div id="plateDigitsGroup" class="w-[52%] flex items-center justify-center gap-0.5">
+                  <span id="digit1" class="gost-char gost-digit">0</span>
+                  <span id="digit2" class="gost-char gost-digit">6</span>
+                  <span id="digit3" class="gost-char gost-digit">9</span>
+                </div>
+                <div class="w-[30%] flex items-center justify-center gap-0.5">
+                  <span id="plateLetterSecond" class="gost-char gost-letter">К</span>
+                  <span id="plateLetterThird" class="gost-char gost-letter">Е</span>
                 </div>
               </div>
+
+              <!-- Правая секция: Регион + RUS + Триколор -->
+              <div class="w-[90px] shrink-0 flex flex-col items-center justify-between py-1.5 px-1 bg-inherit">
+                <div id="plateRegion" class="gost-char gost-region mt-0.5">77</div>
+                <div class="flex items-center gap-1.5 pb-0.5">
+                  <span class="font-black text-[13px] leading-none text-current tracking-tight font-sans">RUS</span>
+                  <div class="w-[22px] h-[14px] border-[1.2px] border-black/80 flex flex-col rounded-[1px] overflow-hidden shadow-sm">
+                    <div class="h-1/3 bg-white"></div>
+                    <div class="h-1/3 bg-[#0039A6]"></div>
+                    <div class="h-1/3 bg-[#D52B1E]"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Описание, регион и активные множители (ОБНОВЛЯЮТСЯ КАЖДЫЙ ПРОКРУТ) -->
+        <div class="mt-2 text-center bg-transparent rounded-2xl p-2 relative z-10">
+          <div id="regionSubtext" class="text-xs text-[#8e8e93] font-semibold tracking-wide">Регион 77 · Москва</div>
+          
+          <!-- Динамический список совпадений и множителей -->
+          <div id="modifiersList" class="mt-2 space-y-1 text-xs">
+            <!-- Генерируется при каждом прокруте -->
+          </div>
+
+          <!-- Кнопки: «В гараж» и Поделиться -->
+          <div class="mt-3 flex items-center justify-center gap-2 pt-2">
+            <button id="btnSaveToGarage" onclick="saveCurrentToGarage()" class="flex-1 py-2.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-[#2c2c2e] text-xs font-black text-white active:scale-95 transition shadow-sm flex items-center justify-center gap-1.5">
+              <i data-lucide="warehouse" class="w-4 h-4 text-[#22c55e]"></i>
+              <span id="btnSaveToGarageText">В гараж</span>
+            </button>
+
+            <div id="garageSavedBadge" class="hidden flex-1 py-2.5 rounded-2xl bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-xs font-black flex items-center justify-center gap-1.5">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Сохранён в гараже</span>
             </div>
 
+            <button onclick="shareCurrentPlate()" class="w-11 h-10 rounded-2xl bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-[#2c2c2e] text-gray-300 flex items-center justify-center active:scale-95 transition" title="Поделиться">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Уведомление об авто-продаже номера -->
+          <div class="text-center mt-2 text-[11px] text-[#8e8e93]" id="autoSellNoteContainer">
+            <span id="autoSellNotice">Этот номер продастся за <span id="sellPriceNote" class="font-bold text-gray-200 font-mono">2 763 ₽</span> при следующем крутке</span>
           </div>
         </div>
-      </div>
 
-      <!-- Описание, регион и активные множители (ОБНОВЛЯЮТСЯ КАЖДЫЙ ПРОКРУТ) -->
-      <div class="mt-2 text-center bg-transparent rounded-2xl p-2 relative z-10">
-        <div id="regionSubtext" class="text-xs text-[#8e8e93] font-semibold tracking-wide">Регион 77 · Москва</div>
-        
-        <!-- Динамический список совпадений и множителей -->
-        <div id="modifiersList" class="mt-2 space-y-1 text-xs">
-          <!-- Генерируется при каждом прокруте -->
-        </div>
+      </main>
 
-        <!-- Кнопки: «В гараж» и Поделиться -->
-        <div class="mt-3 flex items-center justify-center gap-2 pt-2">
-          <button id="btnSaveToGarage" onclick="saveCurrentToGarage()" class="flex-1 py-2.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-[#2c2c2e] text-xs font-black text-white active:scale-95 transition shadow-sm flex items-center justify-center gap-1.5">
-            <i data-lucide="warehouse" class="w-4 h-4 text-[#22c55e]"></i>
-            <span id="btnSaveToGarageText">В гараж</span>
+      <!-- НИЖНЯЯ ПАНЕЛЬ СТАВОК И КРУТКИ -->
+      <div class="px-4 pb-2 pt-1 flex flex-col gap-2 z-20 bg-[#000000]">
+        <section class="flex items-center gap-2">
+          <button onclick="openModal('countryModal')" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] flex items-center justify-between text-xs font-bold text-white active:scale-95 transition">
+            <div class="flex items-center gap-1.5 truncate">
+              <span id="selectedCountryFlag">🇷🇺</span>
+              <span id="selectedCountryText" class="truncate">Россия · 77</span>
+            </div>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#8e8e93] shrink-0 ml-1"></i>
           </button>
 
-          <div id="garageSavedBadge" class="hidden flex-1 py-2.5 rounded-2xl bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-xs font-black flex items-center justify-center gap-1.5">
-            <i data-lucide="check" class="w-4 h-4"></i>
-            <span>Сохранён в гараже</span>
-          </div>
-
-          <button onclick="shareCurrentPlate()" class="w-11 h-10 rounded-2xl bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-[#2c2c2e] text-gray-300 flex items-center justify-center active:scale-95 transition" title="Поделиться">
-            <i data-lucide="share-2" class="w-4 h-4"></i>
+          <button onclick="openModal('betModal')" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] flex items-center justify-between text-xs font-bold text-white active:scale-95 transition">
+            <div class="truncate">
+              <span id="selectedBetText">Ставка ×1</span>
+            </div>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#8e8e93] shrink-0 ml-1"></i>
           </button>
-        </div>
 
-        <!-- Уведомление об авто-продаже номера -->
-        <div class="text-center mt-2 text-[11px] text-[#8e8e93]" id="autoSellNoteContainer">
-          <span id="autoSellNotice">Этот номер продастся за <span id="sellPriceNote" class="font-bold text-gray-200 font-mono">2 763 ₽</span> при следующем крутке</span>
-        </div>
+          <button id="btnToggleSpinMode" onclick="toggleSpinMode()" class="w-14 py-2.5 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] text-xs font-black text-[#22c55e] active:scale-95 transition flex items-center justify-center">
+            5×
+          </button>
+        </section>
+
+        <!-- Главная кнопка КРУТИТЬ (Яркий неоновый зелёный) -->
+        <button id="btnSpin" onclick="spin()" class="w-full py-4 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] active:scale-[0.98] transition-all duration-150 text-black font-black text-base tracking-wide flex items-center justify-center gap-2 shadow-[0_4px_25px_rgba(34,197,94,0.4)]">
+          <span id="spinButtonText">Крутить ещё ×5</span>
+          <span id="spinButtonPrice" class="bg-black/20 px-2.5 py-1 rounded-lg text-sm font-mono text-black font-black">5 000 ₽</span>
+        </button>
       </div>
-
-    </main>
-
-    <!-- НИЖНЯЯ ПАНЕЛЬ СТАВОК И КРУТКИ -->
-    <div class="px-4 pb-2 pt-1 flex flex-col gap-2 z-20 bg-[#000000]">
-      <section class="flex items-center gap-2">
-        <button onclick="openModal('countryModal')" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] flex items-center justify-between text-xs font-bold text-white active:scale-95 transition">
-          <div class="flex items-center gap-1.5 truncate">
-            <span id="selectedCountryFlag">🇷🇺</span>
-            <span id="selectedCountryText" class="truncate">Россия · 77</span>
-          </div>
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#8e8e93] shrink-0 ml-1"></i>
-        </button>
-
-        <button onclick="openModal('betModal')" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] flex items-center justify-between text-xs font-bold text-white active:scale-95 transition">
-          <div class="truncate">
-            <span id="selectedBetText">Ставка ×1</span>
-          </div>
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#8e8e93] shrink-0 ml-1"></i>
-        </button>
-
-        <button id="btnToggleSpinMode" onclick="toggleSpinMode()" class="w-14 py-2.5 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] text-xs font-black text-[#22c55e] active:scale-95 transition flex items-center justify-center">
-          5×
-        </button>
-      </section>
-
-      <!-- Главная кнопка КРУТИТЬ (Яркий неоновый зелёный) -->
-      <button id="btnSpin" onclick="spin()" class="w-full py-4 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] active:scale-[0.98] transition-all duration-150 text-black font-black text-base tracking-wide flex items-center justify-center gap-2 shadow-[0_4px_25px_rgba(34,197,94,0.4)]">
-        <span id="spinButtonText">Крутить ещё ×5</span>
-        <span id="spinButtonPrice" class="bg-black/20 px-2.5 py-1 rounded-lg text-sm font-mono text-black font-black">5 000 ₽</span>
-      </button>
-
-      <!-- Нижняя навигация Telegram Mini App -->
-      <nav class="border-t border-[#1c1c1e] bg-[#000000] pt-2 pb-1 flex items-center justify-around">
-        <button class="flex flex-col items-center gap-0.5 text-[#22c55e] active:scale-95 transition">
-          <i data-lucide="play" class="w-4 h-4 fill-current"></i>
-          <span class="text-[10px] font-black">Играть</span>
-        </button>
-        <button onclick="openGarageModal()" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
-          <div class="relative">
-            <i data-lucide="warehouse" class="w-4 h-4"></i>
-            <span id="garageCountBadge" class="hidden absolute -top-1 -right-2 bg-[#22c55e] text-black text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">0</span>
-          </div>
-          <span class="text-[10px] font-bold">Гараж</span>
-        </button>
-        <button onclick="showToast('Рынок откроется в обновлении 1.3')" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
-          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-          <span class="text-[10px] font-bold">Рынок</span>
-        </button>
-        <button onclick="showToast('Реферальная программа в разработке')" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
-          <i data-lucide="users" class="w-4 h-4"></i>
-          <span class="text-[10px] font-bold">Друзья</span>
-        </button>
-        <button onclick="resetProgress()" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-rose-400 active:scale-95 transition" title="Сбросить">
-          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-          <span class="text-[10px] font-bold">Сброс</span>
-        </button>
-      </nav>
     </div>
 
+    <!-- РАЗДЕЛ 2: МАШИНЫ (КОНТЕЙНЕРЫ СО СКРИНШОТОВ) -->
+    <div id="sectionCarsView" class="hidden flex-1 px-4 py-3 overflow-y-auto no-scrollbar flex flex-col justify-between">
+      <div class="space-y-3">
+        <div class="text-center mb-1">
+          <h2 class="text-lg font-black text-white">Контейнеры с машинами</h2>
+          <p class="text-[11px] text-[#8e8e93]">Открывайте кейсы и выбивайте авто от ВАЗ-2107 до Lamborghini Urus</p>
+        </div>
+
+        <!-- Сетка 2x2: Обычный, Редкий, Эпический, Легендарный -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- Обычный контейнер -->
+          <div onclick="openContainerInfoModal('common_case')" class="bg-gradient-to-b from-[#252528] to-[#161618] border border-[#2c2c2e] rounded-3xl p-3.5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition relative overflow-hidden shadow-lg group">
+            <div class="absolute -top-12 -left-12 w-28 h-28 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+            <div class="w-16 h-16 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-md">
+                <path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#9ca3af"/>
+                <path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#6b7280"/>
+                <path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#4b5563"/>
+                <path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#d1d5db" opacity="0.8"/>
+              </svg>
+            </div>
+            <div class="text-xs font-black text-white leading-tight">Обычный контейнер</div>
+            <div class="text-sm font-black text-white font-mono mt-1">10 000 ₽</div>
+            <div class="text-[10px] text-[#8e8e93] font-semibold mt-0.5">легендарка+ 0,40%</div>
+          </div>
+
+          <!-- Редкий контейнер -->
+          <div onclick="openContainerInfoModal('rare_case')" class="bg-gradient-to-b from-[#17253b] to-[#121b29] border border-[#0a84ff]/30 rounded-3xl p-3.5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition relative overflow-hidden shadow-lg group">
+            <div class="absolute -top-12 -right-12 w-28 h-28 bg-[#0a84ff]/15 rounded-full blur-xl pointer-events-none"></div>
+            <div class="w-16 h-16 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-md">
+                <path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#60a5fa"/>
+                <path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#2563eb"/>
+                <path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#1d4ed8"/>
+                <path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#bfdbfe" opacity="0.9"/>
+              </svg>
+            </div>
+            <div class="text-xs font-black text-white leading-tight">Редкий контейнер</div>
+            <div class="text-sm font-black text-[#0a84ff] font-mono mt-1">30 000 ₽</div>
+            <div class="text-[10px] text-[#8e8e93] font-semibold mt-0.5">легендарка+ 2%</div>
+          </div>
+
+          <!-- Эпический контейнер -->
+          <div onclick="openContainerInfoModal('epic_case')" class="bg-gradient-to-b from-[#2b1b36] to-[#1a1222] border border-[#bf5af2]/30 rounded-3xl p-3.5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition relative overflow-hidden shadow-lg group">
+            <div class="absolute -top-12 -left-12 w-28 h-28 bg-[#bf5af2]/15 rounded-full blur-xl pointer-events-none"></div>
+            <div class="w-16 h-16 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-md">
+                <path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#c084fc"/>
+                <path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#9333ea"/>
+                <path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#7e22ce"/>
+                <path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#e9d5ff" opacity="0.9"/>
+              </svg>
+            </div>
+            <div class="text-xs font-black text-white leading-tight">Эпический контейнер</div>
+            <div class="text-sm font-black text-[#bf5af2] font-mono mt-1">100 000 ₽</div>
+            <div class="text-[10px] text-[#8e8e93] font-semibold mt-0.5">легендарка+ 12%</div>
+          </div>
+
+          <!-- Легендарный контейнер -->
+          <div onclick="openContainerInfoModal('legendary_case')" class="bg-gradient-to-b from-[#332b14] to-[#1c180d] border border-[#ffd60a]/30 rounded-3xl p-3.5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition relative overflow-hidden shadow-lg group">
+            <div class="absolute -top-12 -right-12 w-28 h-28 bg-[#ffd60a]/15 rounded-full blur-xl pointer-events-none"></div>
+            <div class="w-16 h-16 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-md">
+                <path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#fde047"/>
+                <path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#eab308"/>
+                <path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#ca8a04"/>
+                <path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#fef08a" opacity="0.9"/>
+              </svg>
+            </div>
+            <div class="text-xs font-black text-white leading-tight">Легендарный контейнер</div>
+            <div class="text-sm font-black text-[#ffd60a] font-mono mt-1">300 000 ₽</div>
+            <div class="text-[10px] text-[#8e8e93] font-semibold mt-0.5">легендарка+ 40%</div>
+          </div>
+        </div>
+
+        <!-- Широкая плашка: Элитный контейнер -->
+        <div onclick="openContainerInfoModal('elite_case')" class="bg-gradient-to-r from-[#242013] via-[#1a1711] to-[#242013] border border-[#eab308]/40 rounded-3xl p-4 flex items-center justify-between cursor-pointer active:scale-95 transition shadow-xl relative overflow-hidden group">
+          <div class="flex items-center gap-3.5">
+            <div class="w-14 h-14 shrink-0 flex items-center justify-center group-hover:scale-105 transition">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-lg">
+                <path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#374151"/>
+                <path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#1f2937"/>
+                <path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#111827"/>
+                <path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#9ca3af" opacity="0.7"/>
+                <polygon points="50,42 54,52 64,52 56,58 59,68 50,62 41,68 44,58 36,52 46,52" fill="#ffd60a"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-sm font-black text-white">Элитный контейнер</div>
+              <div class="text-[11px] text-[#8e8e93] font-medium">эпическая и лучше · легендарка+ 65%</div>
+              <div class="text-base font-black text-[#f59e0b] font-mono mt-0.5">500 000 ₽</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-[#8e8e93]"></i>
+        </div>
+      </div>
+
+      <div class="mt-4 p-3 rounded-2xl bg-[#1c1c1e] border border-[#2c2c2e] text-center">
+        <span class="text-xs text-[#8e8e93]">Выбитые автомобили сохраняются в <span onclick="openGarageModal()" class="text-[#22c55e] font-bold cursor-pointer underline">Гараж</span> и могут быть проданы!</span>
+      </div>
+    </div>
+
+    <!-- Нижняя навигация Telegram Mini App -->
+    <nav class="border-t border-[#1c1c1e] bg-[#000000] pt-2 pb-1 flex items-center justify-around z-20">
+      <button onclick="switchAppTab('plates')" class="flex flex-col items-center gap-0.5 active:scale-95 transition" id="navBtnPlay">
+        <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+        <span class="text-[10px] font-black">Играть</span>
+      </button>
+      <button onclick="openGarageModal()" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
+        <div class="relative">
+          <i data-lucide="warehouse" class="w-4 h-4"></i>
+          <span id="garageCountBadge" class="hidden absolute -top-1 -right-2 bg-[#22c55e] text-black text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">0</span>
+        </div>
+        <span class="text-[10px] font-bold">Гараж</span>
+      </button>
+      <button onclick="showToast('Рынок откроется в обновлении 1.3')" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
+        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Рынок</span>
+      </button>
+      <button onclick="showToast('Реферальная программа в разработке')" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-white active:scale-95 transition">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Друзья</span>
+      </button>
+      <button onclick="resetProgress()" class="flex flex-col items-center gap-0.5 text-[#8e8e93] hover:text-rose-400 active:scale-95 transition" title="Сбросить">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Сброс</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- МОДАЛКА 1: ДЕТАЛИ И ШАНСЫ КОНТЕЙНЕРА (СО СКРИНШОТОВ) -->
+  <div id="modalContainerInfo" class="fixed inset-0 z-50 flex flex-col justify-end hidden">
+    <div class="absolute inset-0 bg-black/85 backdrop-blur-sm" onclick="closeModal('modalContainerInfo')"></div>
+    <div class="relative w-full max-w-md mx-auto bg-[#1c1c1e] rounded-t-3xl border-t border-[#2c2c2e] p-5 flex flex-col max-h-[90vh]">
+      <div class="w-12 h-1.5 bg-[#48484a] rounded-full mx-auto mb-3"></div>
+      
+      <h2 id="containerModalTitle" class="text-xl font-black text-center text-white mb-2">Обычный контейнер</h2>
+      
+      <!-- Большая иконка контейнера -->
+      <div id="containerModalIcon" class="w-24 h-24 mx-auto my-1 flex items-center justify-center">
+        <!-- SVG вставляется скриптом -->
+      </div>
+
+      <!-- Список редкостей и шансов со скриншотов -->
+      <div id="containerChancesList" class="space-y-2 my-3 overflow-y-auto max-h-[46vh] no-scrollbar">
+        <!-- Генерируется скриптом -->
+      </div>
+
+      <!-- Кнопка «Открыть за X ₽» -->
+      <button id="btnOpenContainerDirect" onclick="triggerContainerOpenProcess()" class="w-full py-4 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] active:scale-[0.98] transition-all text-black font-black text-base shadow-[0_4px_25px_rgba(34,197,94,0.35)] mt-1">
+        Открыть за 10 000 ₽
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА 2: РУЛЕТКА ОТКРЫТИЯ КЕЙСА (ГОРИЗОНТАЛЬНЫЙ CS-ПРОКРУТ) -->
+  <div id="modalCaseRoulette" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 hidden">
+    <div class="absolute inset-0 bg-black/92 backdrop-blur-md"></div>
+    
+    <div class="relative w-full max-w-md bg-[#161618] border border-[#2c2c2e] rounded-3xl p-5 shadow-2xl flex flex-col items-center overflow-hidden">
+      <div class="text-xs uppercase tracking-widest text-[#8e8e93] font-bold mb-1" id="rouletteCaseNameHeader">ОТКРЫТИЕ КОНТЕЙНЕРА</div>
+      <div class="text-sm font-black text-white mb-4">Испытай удачу!</div>
+
+      <!-- Окно рулетки с вертикальным визиром -->
+      <div class="w-full h-32 bg-[#000000] rounded-2xl border-2 border-[#2c2c2e] relative overflow-hidden flex items-center">
+        <!-- Центральный прицел/визир -->
+        <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-[#ffd60a] z-30 shadow-[0_0_12px_#ffd60a] pointer-events-none">
+          <div class="w-3 h-3 bg-[#ffd60a] rotate-45 mx-auto -mt-1.5"></div>
+          <div class="w-3 h-3 bg-[#ffd60a] rotate-45 mx-auto mt-[112px]"></div>
+        </div>
+
+        <!-- Лента карточек автомобилей -->
+        <div id="rouletteTrack" class="flex items-center gap-3 px-3 transition-transform duration-[4500ms] ease-out will-change-transform">
+          <!-- Генерируется скриптом -->
+        </div>
+      </div>
+
+      <!-- Результат после завершения прокрута -->
+      <div id="rouletteResultBox" class="mt-4 w-full flex flex-col items-center text-center hidden">
+        <div class="text-xs text-[#8e8e93] font-bold">Вам выпал автомобиль:</div>
+        <div id="resultCarName" class="text-lg font-black text-white mt-0.5">Toyota Land Cruiser 300</div>
+        <div id="resultCarRarity" class="text-xs font-black uppercase tracking-wider text-[#ffd60a] mt-0.5">Легендарный</div>
+        <div id="resultCarPrice" class="text-xl font-black text-[#22c55e] font-mono mt-1">2 850 000 ₽</div>
+
+        <div class="flex gap-2 w-full mt-4">
+          <button onclick="sellRouletteDroppedCar()" class="flex-1 py-3 rounded-2xl bg-red-600/20 border border-red-500/40 text-red-400 text-xs font-black active:scale-95 transition">
+            Продать
+          </button>
+          <button onclick="garageRouletteDroppedCar()" class="flex-1 py-3 rounded-2xl bg-[#22c55e] text-black text-xs font-black active:scale-95 transition shadow-lg">
+            В гараж
+          </button>
+        </div>
+      </div>
+
+      <div id="rouletteSpinningIndicator" class="mt-4 text-xs font-bold text-[#8e8e93] flex items-center gap-2">
+        <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#22c55e]"></i>
+        <span>Открываем контейнер...</span>
+      </div>
+    </div>
   </div>
 
   <!-- МОДАЛКА: РЕЖИМ ×5 -->
@@ -469,6 +645,136 @@
        КОНФИГУРАЦИЯ СТАВОК И МАТЕМАТИЧЕСКАЯ МОДЕЛЬ МНОЖИТЕЛЕЙ
        ========================================================= */
     const ALLOWED_LETTERS = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
+
+    /* =========================================================
+       БАЗА АВТОМОБИЛЕЙ И КОНТЕЙНЕРОВ (СО СКРИНШОТОВ)
+       ========================================================= */
+    const CAR_RARITIES = {
+      common: { name: 'Обычный', color: '#8e8e93', border: 'border-l-4 border-l-[#8e8e93]', bg: 'bg-[#8e8e93]/10' },
+      uncommon: { name: 'Необычный', color: '#22c55e', border: 'border-l-4 border-l-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+      rare: { name: 'Редкий', color: '#0a84ff', border: 'border-l-4 border-l-[#0a84ff]', bg: 'bg-[#0a84ff]/10' },
+      epic: { name: 'Эпический', color: '#bf5af2', border: 'border-l-4 border-l-[#bf5af2]', bg: 'bg-[#bf5af2]/10' },
+      legendary: { name: 'Легендарный', color: '#ffd60a', border: 'border-l-4 border-l-[#ffd60a]', bg: 'bg-[#ffd60a]/10' },
+      mythic: { name: 'Мифический', color: '#ef4444', border: 'border-l-4 border-l-[#ef4444]', bg: 'bg-[#ef4444]/10' }
+    };
+
+    /* СБАЛАНСИРОВАННЫЕ ЦЕНЫ ДРОПА АВТОМОБИЛЕЙ (РЕАЛИСТИЧНАЯ ЭКОНОМИКА КЕЙСОВ) */
+    const CAR_POOL = {
+      common: [
+        { name: 'ВАЗ-2107', minPrice: 1800, maxPrice: 3200 },
+        { name: 'ВАЗ-2109', minPrice: 2200, maxPrice: 3800 },
+        { name: 'Daewoo Nexia', minPrice: 2600, maxPrice: 4400 },
+        { name: 'Lada Granta', minPrice: 3200, maxPrice: 5200 }
+      ],
+      uncommon: [
+        { name: 'Лада Веста', minPrice: 6500, maxPrice: 9500 },
+        { name: 'Kia Rio', minPrice: 7500, maxPrice: 11000 },
+        { name: 'Hyundai Solaris', minPrice: 8000, maxPrice: 12000 },
+        { name: 'Skoda Rapid', minPrice: 8500, maxPrice: 13500 }
+      ],
+      rare: [
+        { name: 'УАЗ Патриот', minPrice: 18000, maxPrice: 26000 },
+        { name: 'Hyundai Sonata', minPrice: 22000, maxPrice: 32000 },
+        { name: 'Volkswagen Passat', minPrice: 25000, maxPrice: 38000 },
+        { name: 'Toyota Camry 70', minPrice: 28000, maxPrice: 45000 }
+      ],
+      epic: [
+        { name: 'Toyota Land Cruiser Prado', minPrice: 60000, maxPrice: 95000 },
+        { name: 'Audi A6 Allroad', minPrice: 70000, maxPrice: 115000 },
+        { name: 'BMW 5 Series', minPrice: 80000, maxPrice: 135000 },
+        { name: 'Mercedes-Benz E-Class', minPrice: 90000, maxPrice: 150000 }
+      ],
+      legendary: [
+        { name: 'Toyota Land Cruiser 300', minPrice: 200000, maxPrice: 320000 },
+        { name: 'Range Rover Vogue', minPrice: 240000, maxPrice: 380000 },
+        { name: 'Porsche Cayenne GTS', minPrice: 280000, maxPrice: 420000 },
+        { name: 'Mercedes-Benz G63 AMG', minPrice: 320000, maxPrice: 480000 }
+      ],
+      mythic: [
+        { name: 'Lamborghini Urus', minPrice: 750000, maxPrice: 1100000 },
+        { name: 'Mercedes-Maybach S-Class', minPrice: 850000, maxPrice: 1300000 },
+        { name: 'Rolls-Royce Cullinan', minPrice: 1100000, maxPrice: 1600000 },
+        { name: 'Ferrari SF90 Stradale', minPrice: 1300000, maxPrice: 1950000 }
+      ]
+    };
+
+    // Точные шансы и конфигурация со скриншотов
+    const CONTAINERS_CONFIG = {
+      common_case: {
+        id: 'common_case',
+        name: 'Обычный контейнер',
+        cost: 10000,
+        subtext: 'легендарка+ 0,40%',
+        color: '#9ca3af',
+        iconSvg: `<svg viewBox="0 0 100 100" class="w-20 h-20 drop-shadow-xl"><path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#9ca3af"/><path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#6b7280"/><path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#4b5563"/><path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#d1d5db" opacity="0.8"/></svg>`,
+        chances: [
+          { rarity: 'common', pct: '70%', num: 70 },
+          { rarity: 'uncommon', pct: '22%', num: 22 },
+          { rarity: 'rare', pct: '6%', num: 6 },
+          { rarity: 'epic', pct: '1.6%', num: 1.6 },
+          { rarity: 'legendary', pct: '0,35%', num: 0.35 },
+          { rarity: 'mythic', pct: '0,05%', num: 0.05 }
+        ]
+      },
+      rare_case: {
+        id: 'rare_case',
+        name: 'Редкий контейнер',
+        cost: 30000,
+        subtext: 'легендарка+ 2%',
+        color: '#0a84ff',
+        iconSvg: `<svg viewBox="0 0 100 100" class="w-20 h-20 drop-shadow-xl"><path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#60a5fa"/><path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#2563eb"/><path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#1d4ed8"/><path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#bfdbfe" opacity="0.9"/></svg>`,
+        chances: [
+          { rarity: 'common', pct: '32%', num: 32 },
+          { rarity: 'uncommon', pct: '40%', num: 40 },
+          { rarity: 'rare', pct: '19%', num: 19 },
+          { rarity: 'epic', pct: '6.5%', num: 6.5 },
+          { rarity: 'legendary', pct: '2%', num: 2.0 },
+          { rarity: 'mythic', pct: '0,4%', num: 0.4 }
+        ]
+      },
+      epic_case: {
+        id: 'epic_case',
+        name: 'Эпический контейнер',
+        cost: 100000,
+        subtext: 'легендарка+ 12%',
+        color: '#bf5af2',
+        iconSvg: `<svg viewBox="0 0 100 100" class="w-20 h-20 drop-shadow-xl"><path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#c084fc"/><path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#9333ea"/><path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#7e22ce"/><path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#e9d5ff" opacity="0.9"/></svg>`,
+        chances: [
+          { rarity: 'uncommon', pct: '23%', num: 23 },
+          { rarity: 'rare', pct: '40%', num: 40 },
+          { rarity: 'epic', pct: '25%', num: 25 },
+          { rarity: 'legendary', pct: '10%', num: 10 },
+          { rarity: 'mythic', pct: '2%', num: 2.0 }
+        ]
+      },
+      legendary_case: {
+        id: 'legendary_case',
+        name: 'Легендарный контейнер',
+        cost: 300000,
+        subtext: 'легендарка+ 40%',
+        color: '#ffd60a',
+        iconSvg: `<svg viewBox="0 0 100 100" class="w-20 h-20 drop-shadow-xl"><path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#fde047"/><path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#eab308"/><path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#ca8a04"/><path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#fef08a" opacity="0.9"/></svg>`,
+        chances: [
+          { rarity: 'rare', pct: '20%', num: 20 },
+          { rarity: 'epic', pct: '40%', num: 40 },
+          { rarity: 'legendary', pct: '30%', num: 30 },
+          { rarity: 'mythic', pct: '10%', num: 10 }
+        ]
+      },
+      elite_case: {
+        id: 'elite_case',
+        name: 'Элитный контейнер',
+        cost: 500000,
+        subtext: 'эпическая и лучше · легендарка+ 65%',
+        color: '#f59e0b',
+        iconSvg: `<svg viewBox="0 0 100 100" class="w-20 h-20 drop-shadow-xl"><path d="M50 15 L85 35 L50 55 L15 35 Z" fill="#374151"/><path d="M15 35 L50 55 L50 85 L15 65 Z" fill="#1f2937"/><path d="M85 35 L50 55 L50 85 L85 65 Z" fill="#111827"/><path d="M42 24 L58 33 L58 75 L42 66 Z" fill="#9ca3af" opacity="0.7"/><polygon points="50,42 54,52 64,52 56,58 59,68 50,62 41,68 44,58 36,52 46,52" fill="#ffd60a"/></svg>`,
+        chances: [
+          { rarity: 'epic', pct: '35%', num: 35 },
+          { rarity: 'legendary', pct: '45%', num: 45 },
+          { rarity: 'mythic', pct: '20%', num: 20 }
+        ]
+      }
+    };
     
     // Полный список регионов РФ + режим «Любой регион»
     // Столичные (Москва/МО), Питер, Екб (Свердловская обл.) и Казань (Татарстан) = 3 000 ₽
@@ -651,6 +957,7 @@
     ];
 
     let state = {
+      currentTab: 'plates', // 'plates' или 'cars'
       level: 1,
       currentXp: 0,
       balance: 100000,
@@ -663,13 +970,227 @@
       isCurrentSavedToGarage: false,
       isCurrentSold: false,
       pendingSpin5List: [],
-      garage: []
+      garage: [],
+      activeContainerId: 'common_case',
+      isRouletteSpinning: false,
+      currentDroppedCar: null
     };
+
+    /* Вкладки: Номера / Машины */
+    function switchAppTab(tab) {
+      state.currentTab = tab;
+      const tabPlates = document.getElementById('tabBtnPlates');
+      const tabCars = document.getElementById('tabBtnCars');
+      const secPlates = document.getElementById('sectionPlatesView');
+      const secCars = document.getElementById('sectionCarsView');
+      const navPlay = document.getElementById('navBtnPlay');
+
+      if (tab === 'plates') {
+        tabPlates.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl bg-[#3a3a3c] text-white shadow transition';
+        tabCars.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl text-[#8e8e93] hover:text-white transition';
+        secPlates.classList.remove('hidden');
+        secCars.classList.add('hidden');
+        if (navPlay) navPlay.className = 'flex flex-col items-center gap-0.5 text-[#22c55e] active:scale-95 transition';
+      } else {
+        tabCars.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl bg-[#3a3a3c] text-white shadow transition';
+        tabPlates.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl text-[#8e8e93] hover:text-white transition';
+        secPlates.classList.add('hidden');
+        secCars.classList.remove('hidden');
+        if (navPlay) navPlay.className = 'flex flex-col items-center gap-0.5 text-[#8e8e93] active:scale-95 transition';
+      }
+      lucide.createIcons();
+    }
+
+    /* Модальное окно информации о контейнере */
+    function openContainerInfoModal(containerId) {
+      state.activeContainerId = containerId;
+      const cfg = CONTAINERS_CONFIG[containerId];
+      if (!cfg) return;
+
+      document.getElementById('containerModalTitle').textContent = cfg.name;
+      document.getElementById('containerModalIcon').innerHTML = cfg.iconSvg;
+      document.getElementById('btnOpenContainerDirect').textContent = `Открыть за ${fmt(cfg.cost)} ₽`;
+
+      const list = document.getElementById('containerChancesList');
+      list.innerHTML = '';
+
+      cfg.chances.forEach(ch => {
+        const rar = CAR_RARITIES[ch.rarity];
+        const carNames = CAR_POOL[ch.rarity].map(c => c.name).slice(0, 3).join(', ') + '...';
+        
+        const row = document.createElement('div');
+        row.className = `p-2.5 rounded-2xl bg-[#242426] border border-[#2c2c2e] flex items-center justify-between text-xs shadow-sm ${rar.border}`;
+        row.innerHTML = `
+          <div class="flex items-center gap-2 truncate pr-2">
+            <span class="font-extrabold" style="color: ${rar.color}">${rar.name}</span>
+            <span class="text-[11px] text-[#8e8e93] truncate">${carNames}</span>
+          </div>
+          <span class="font-mono font-black text-white shrink-0">${ch.pct}</span>
+        `;
+        list.appendChild(row);
+      });
+
+      openModal('modalContainerInfo');
+    }
+
+    /* Запуск CS-рулетки открытия контейнера */
+    function triggerContainerOpenProcess() {
+      const cfg = CONTAINERS_CONFIG[state.activeContainerId];
+      if (!cfg) return;
+
+      if (state.balance < cfg.cost) {
+        showToast('Недостаточно рублей для открытия контейнера!');
+        return;
+      }
+
+      initAudio();
+      closeModal('modalContainerInfo');
+
+      // Списание баланса
+      state.balance -= cfg.cost;
+      showBalanceDelta(cfg.cost, false);
+      updateUI();
+      saveState();
+
+      // Определение выигрышного авто по шансам
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      let wonRarity = cfg.chances[0].rarity;
+
+      for (let ch of cfg.chances) {
+        cumulative += ch.num;
+        if (rand <= cumulative) {
+          wonRarity = ch.rarity;
+          break;
+        }
+      }
+
+      const pool = CAR_POOL[wonRarity];
+      const selectedModel = getRandomItem(pool);
+      const wonPrice = Math.round(selectedModel.minPrice + Math.random() * (selectedModel.maxPrice - selectedModel.minPrice));
+
+      state.currentDroppedCar = {
+        id: Date.now() + Math.random(),
+        type: 'car',
+        name: selectedModel.name,
+        rarity: wonRarity,
+        price: wonPrice,
+        containerName: cfg.name
+      };
+
+      startCaseRoulette(cfg, state.currentDroppedCar);
+    }
+
+    /* Анимация горизонтальной рулетки */
+    function startCaseRoulette(cfg, winningCar) {
+      state.isRouletteSpinning = true;
+      openModal('modalCaseRoulette');
+      document.getElementById('rouletteCaseNameHeader').textContent = cfg.name;
+      document.getElementById('rouletteResultBox').classList.add('hidden');
+      document.getElementById('rouletteSpinningIndicator').classList.remove('hidden');
+
+      const track = document.getElementById('rouletteTrack');
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0px)';
+      track.innerHTML = '';
+
+      // Генерируем 40 карточек для рулетки (30-я карточка — выигрышная)
+      const allRarities = Object.keys(CAR_RARITIES);
+      const totalCards = 40;
+      const winningIndex = 30;
+
+      for (let i = 0; i < totalCards; i++) {
+        let cardData;
+        if (i === winningIndex) {
+          cardData = winningCar;
+        } else {
+          const rRarity = getRandomItem(allRarities);
+          const rModel = getRandomItem(CAR_POOL[rRarity]);
+          cardData = { name: rModel.name, rarity: rRarity };
+        }
+
+        const rar = CAR_RARITIES[cardData.rarity];
+        const card = document.createElement('div');
+        card.className = `w-28 h-24 shrink-0 rounded-2xl bg-[#242426] border border-[#3a3a3c] flex flex-col items-center justify-center p-2 text-center select-none shadow-md ${rar.border}`;
+        card.innerHTML = `
+          <div class="text-2xl mb-1">🚗</div>
+          <div class="text-[11px] font-black text-white leading-tight truncate w-full">${cardData.name}</div>
+          <div class="text-[9px] font-bold uppercase mt-0.5" style="color: ${rar.color}">${rar.name}</div>
+        `;
+        track.appendChild(card);
+      }
+
+      // Запуск плавной анимации прокрутки
+      const cardWidth = 112 + 12; // 112px ширина + 12px gap
+      const offsetCenter = (winningIndex * cardWidth) - (window.innerWidth > 448 ? 160 : window.innerWidth / 2 - 56);
+      const randomJitter = (Math.random() - 0.5) * 45; // случайное смещение внутри карточки
+      const finalTranslate = -(offsetCenter + randomJitter);
+
+      setTimeout(() => {
+        track.style.transition = 'transform 4.5s cubic-bezier(0.12, 0.8, 0.2, 1)';
+        track.style.transform = `translateX(${finalTranslate}px)`;
+        
+        // Звуки тикания во время прокрутки
+        let ticks = 0;
+        const tickTimer = setInterval(() => {
+          ticks++;
+          playBeep("C5");
+          if (ticks > 25) clearInterval(tickTimer);
+        }, 160);
+      }, 50);
+
+      // Завершение рулетки
+      setTimeout(() => {
+        state.isRouletteSpinning = false;
+        playCoin();
+        playBeep("G5");
+
+        document.getElementById('rouletteSpinningIndicator').classList.add('hidden');
+        const resBox = document.getElementById('rouletteResultBox');
+        resBox.classList.remove('hidden');
+
+        document.getElementById('resultCarName').textContent = winningCar.name;
+        const rar = CAR_RARITIES[winningCar.rarity];
+        const rarEl = document.getElementById('resultCarRarity');
+        rarEl.textContent = rar.name;
+        rarEl.style.color = rar.color;
+        document.getElementById('resultCarPrice').textContent = `${fmt(winningCar.price)} ₽`;
+
+        // Начисление XP за открытие авто
+        const xpMap = { common: 5, uncommon: 15, rare: 45, epic: 140, legendary: 380, mythic: 1000 };
+        addXp(xpMap[winningCar.rarity] || 25);
+      }, 4600);
+    }
+
+    /* Продажа авто из рулетки */
+    function sellRouletteDroppedCar() {
+      if (!state.currentDroppedCar) return;
+      state.balance += state.currentDroppedCar.price;
+      showBalanceDelta(state.currentDroppedCar.price, true);
+      playCoin();
+      showToast(`Автомобиль продан за +${fmt(state.currentDroppedCar.price)} ₽!`);
+      closeModal('modalCaseRoulette');
+      state.currentDroppedCar = null;
+      updateUI();
+      saveState();
+    }
+
+    /* Сохранение авто в гараж из рулетки */
+    function garageRouletteDroppedCar() {
+      if (!state.currentDroppedCar) return;
+      state.garage.unshift(state.currentDroppedCar);
+      playBeep("C6");
+      showToast('Автомобиль успешно отправлен в Гараж!');
+      closeModal('modalCaseRoulette');
+      state.currentDroppedCar = null;
+      updateUI();
+      saveState();
+    }
 
     /* Сохранение в localStorage */
     function saveState() {
       try {
-        localStorage.setItem('plates_game_v5', JSON.stringify({
+        localStorage.setItem('plates_game_v6', JSON.stringify({
           level: state.level,
           currentXp: state.currentXp,
           balance: state.balance,
@@ -684,7 +1205,7 @@
 
     function loadState() {
       try {
-        const raw = localStorage.getItem('plates_game_v5');
+        const raw = localStorage.getItem('plates_game_v6');
         if (raw) {
           const d = JSON.parse(raw);
           state.level = d.level || 1;
@@ -1424,31 +1945,55 @@
         container.innerHTML = `
           <div class="text-center py-12 text-[#8e8e93] text-xs">
             <i data-lucide="warehouse" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-            Гараж пока пуст. Сохраняйте редкие номера!
+            Гараж пока пуст. Выбивайте номера и машины!
           </div>
         `;
       } else {
         state.garage.forEach((item, idx) => {
-          const rar = RARITY_INFO[item.rarity];
           const card = document.createElement('div');
           card.className = 'bg-[#2c2c2e] border border-[#3a3a3c] rounded-2xl p-3 flex items-center justify-between shadow-sm';
-          card.innerHTML = `
-            <div class="flex items-center gap-3">
-              <div class="px-2.5 py-1 bg-white text-black font-black font-plate text-sm rounded border border-black leading-none">
-                ${item.l1}${item.digits}${item.l2}${item.l3} <span class="border-l border-black pl-1 text-[11px] font-sans">${item.region.code}</span>
+          
+          if (item.type === 'car') {
+            // Карточка автомобиля
+            const rar = CAR_RARITIES[item.rarity] || CAR_RARITIES.common;
+            card.innerHTML = `
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center text-xl shrink-0">
+                  🚗
+                </div>
+                <div>
+                  <div class="text-xs font-black text-white">${item.name}</div>
+                  <div class="text-[10px] font-bold" style="color: ${rar.color}">${rar.name} · ${item.containerName || 'Контейнер'}</div>
+                </div>
               </div>
-              <div>
-                <div class="text-xs font-black" style="color: ${rar.color}">${rar.name}</div>
-                <div class="text-[10px] text-[#8e8e93]">${item.region.name}</div>
+              <div class="flex items-center gap-2">
+                <div class="text-xs font-bold text-[#22c55e] font-mono">${fmt(item.price)} ₽</div>
+                <button onclick="sellFromGarage(${idx})" class="text-[11px] px-2.5 py-1 bg-[#22c55e]/20 text-[#22c55e] font-bold rounded-xl active:scale-95 transition">
+                  Продать
+                </button>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-xs font-bold text-[#22c55e] font-mono">${fmt(item.price)} ₽</div>
-              <button onclick="sellFromGarage(${idx})" class="text-[11px] px-2.5 py-1 bg-[#22c55e]/20 text-[#22c55e] font-bold rounded-xl active:scale-95 transition">
-                Продать
-              </button>
-            </div>
-          `;
+            `;
+          } else {
+            // Карточка номерного знака
+            const rar = RARITY_INFO[item.rarity] || RARITY_INFO[0];
+            card.innerHTML = `
+              <div class="flex items-center gap-3">
+                <div class="px-2.5 py-1 bg-white text-black font-black font-plate text-sm rounded border border-black leading-none">
+                  ${item.l1}${item.digits}${item.l2}${item.l3} <span class="border-l border-black pl-1 text-[11px] font-sans">${item.region.code}</span>
+                </div>
+                <div>
+                  <div class="text-xs font-black" style="color: ${rar.color}">${rar.name}</div>
+                  <div class="text-[10px] text-[#8e8e93]">${item.region.name}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="text-xs font-bold text-[#22c55e] font-mono">${fmt(item.price)} ₽</div>
+                <button onclick="sellFromGarage(${idx})" class="text-[11px] px-2.5 py-1 bg-[#22c55e]/20 text-[#22c55e] font-bold rounded-xl active:scale-95 transition">
+                  Продать
+                </button>
+              </div>
+            `;
+          }
           container.appendChild(card);
         });
       }
