@@ -126,6 +126,36 @@
     .glow-rarity-2 { box-shadow: 0 0 38px rgba(10, 132, 255, 0.55), 0 16px 36px rgba(0,0,0,0.95); }
     .glow-rarity-3 { box-shadow: 0 0 46px rgba(191, 90, 242, 0.65), 0 16px 36px rgba(0,0,0,0.95); }
     .glow-rarity-4 { box-shadow: 0 0 55px rgba(255, 214, 10, 0.85), 0 0 20px rgba(245, 158, 11, 0.7); }
+    .glow-rarity-5 { box-shadow: 0 0 65px rgba(239, 68, 68, 0.95), 0 0 30px rgba(220, 38, 38, 0.8); }
+    .glow-rarity-6 { 
+      box-shadow: 0 0 80px rgba(168, 85, 247, 0.95), 0 0 45px rgba(56, 189, 248, 0.9);
+      animation: rainbowGlowPulse 2.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes rainbowGlowPulse {
+      0% { box-shadow: 0 0 60px rgba(168, 85, 247, 0.9), 0 0 30px rgba(59, 130, 246, 0.7); }
+      50% { box-shadow: 0 0 80px rgba(236, 72, 153, 0.9), 0 0 40px rgba(234, 179, 8, 0.7); }
+      100% { box-shadow: 0 0 70px rgba(34, 197, 94, 0.9), 0 0 40px rgba(168, 85, 247, 0.8); }
+    }
+
+    /* Анимация кинематографического дропа для Мифических и Секретных */
+    @keyframes epicShockwave {
+      0% { transform: scale(0.85); filter: brightness(2.5) contrast(1.5); }
+      40% { transform: scale(1.08) rotate(-1deg); filter: brightness(1.6); }
+      75% { transform: scale(0.97) rotate(0.5deg); filter: brightness(1.2); }
+      100% { transform: scale(1) rotate(0); filter: brightness(1); }
+    }
+    .epic-shockwave-anim {
+      animation: epicShockwave 0.75s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+    }
+
+    @keyframes flashOverlayAnim {
+      0% { opacity: 0.9; }
+      100% { opacity: 0; pointer-events: none; }
+    }
+    .flash-overlay {
+      animation: flashOverlayAnim 0.7s ease-out forwards;
+    }
 
     /* Пульсация последнего клевера */
     @keyframes cloverPulse {
@@ -223,7 +253,8 @@
 
       <!-- ЦЕНТРАЛЬНАЯ ИГРОВАЯ ОБЛАСТЬ С ИЗУМРУДНОЙ АУРОЙ -->
       <main class="flex-1 px-4 py-3 flex flex-col justify-center relative">
-        <div class="plate-ambient-glow"></div>
+        <div class="plate-ambient-glow" id="plateAmbientGlowEl"></div>
+        <div id="screenFlashFX" class="fixed inset-0 z-40 bg-white pointer-events-none hidden"></div>
         
         <!-- Шапка редкости и цены -->
         <div class="flex items-center justify-between mb-2 px-1 relative z-10">
@@ -646,6 +677,46 @@
        ========================================================= */
     const ALLOWED_LETTERS = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
 
+    // РАСШИРЕННАЯ БАЗА БЛАТНЫХ, ВЕДОМСТВЕННЫХ И КУЛЬТОВЫХ СЕРИЙ
+    const VIP_SERIES = {
+      // Правительственные и силовые структуры
+      'АМР': { name: 'Правительство РФ / Спецслужбы', mult: 2.8, desc: 'Главная спецсерия РФ' },
+      'ЕКХ': { name: 'ФСО России («Еду Как Хочу»)', mult: 3.1, desc: 'Федеральная служба охраны' },
+      'АМО': { name: 'Мэрия Москвы / Администрация', mult: 2.3, desc: 'Руководство столицы' },
+      'СКР': { name: 'Следственный комитет РФ', mult: 2.7, desc: 'Следственные органы' },
+      'ААА': { name: 'Администрация Президента РФ', mult: 2.4, desc: 'Кремлевский гараж' },
+      'ООО': { name: 'ФСБ / Госбезопасность', mult: 2.2, desc: 'Спецподразделения госбезопасности' },
+      'ВМР': { name: 'Военное ведомство / Минобороны', mult: 2.1, desc: 'Центральный аппарат МО' },
+      'СМР': { name: 'Совет Федерации / Сенаторы', mult: 2.3, desc: 'Сенаторская серия' },
+      'ММР': { name: 'МВД России (Центральный аппарат)', mult: 2.2, desc: 'Министерство внутренних дел' },
+      'МММ': { name: 'ГУВД Москвы / Силовики', mult: 2.4, desc: 'Культовая московская серия' },
+      'РМР': { name: 'Минюст / Прокуратура', mult: 2.0, desc: 'Органы юстиции и надзора' },
+      'АКР': { name: 'Контрольно-ревизионные органы', mult: 2.0, desc: 'Аудит и надзор' },
+      'ЕРЕ': { name: 'Госдума («Единая Россия»)', mult: 1.9, desc: 'Депутатский корпус' },
+
+      // Культовые, уличные и статусные серии
+      'ВОР': { name: 'Культовая серия «ВОР»', mult: 2.6, desc: 'Высший криминальный спрос' },
+      'ХХХ': { name: 'Серия «Три Икса»', mult: 2.8, desc: 'Агрессивный броский стиль' },
+      'ССС': { name: 'Серия «Три Сестры» / Спецсвязь', mult: 2.5, desc: 'Исторический вес спецсвязи' },
+      'ХАМ': { name: 'Дерзкая серия «ХАМ»', mult: 2.2, desc: 'Уличный статус' },
+      'БАН': { name: 'Серия «БАН»', mult: 1.8, desc: 'Эксклюзивная авто-эстетика' },
+      'ТОП': { name: 'Серия «ТОП»', mult: 2.1, desc: 'Элитный подчеркнутый стиль' },
+      'ЗЛО': { name: 'Серия «ЗЛО»', mult: 2.2, desc: 'Эпатаж и узнаваемость' },
+      'СВО': { name: 'Специальная Военная Операция', mult: 2.3, desc: 'Историческая ценность' },
+      'ВСУ': { name: 'Мугуч попросил', mult: 2.0, desc: 'Вооружённые силы Армении' }
+    };
+
+    // ШКАЛА РЕДКОСТЕЙ: ДОБАВЛЕНЫ МИФИЧЕСКИЙ (5) И СЕКРЕТНЫЙ (6)
+    const RARITY_INFO = [
+      { name: 'Обычный', color: '#8e8e93', glow: 'glow-rarity-0', bars: 1, xp: 2, minPrice: 80, maxPrice: 900 },
+      { name: 'Необычный', color: '#22c55e', glow: 'glow-rarity-1', bars: 3, xp: 8, minPrice: 1500, maxPrice: 12000 },
+      { name: 'Редкий', color: '#0a84ff', glow: 'glow-rarity-2', bars: 5, xp: 30, minPrice: 20000, maxPrice: 75000 },
+      { name: 'Эпический', color: '#bf5af2', glow: 'glow-rarity-3', bars: 7, xp: 110, minPrice: 90000, maxPrice: 320000 },
+      { name: 'Легендарный', color: '#ffd60a', glow: 'glow-rarity-4', bars: 9, xp: 350, minPrice: 420000, maxPrice: 1350000 },
+      { name: 'Мифический', color: '#ef4444', glow: 'glow-rarity-5', bars: 10, xp: 950, minPrice: 1600000, maxPrice: 2700000 },
+      { name: 'Секретный', color: '#ec4899', glow: 'glow-rarity-6', bars: 10, xp: 2800, minPrice: 3200000, maxPrice: 5000000 }
+    ];
+
     /* =========================================================
        БАЗА АВТОМОБИЛЕЙ И КОНТЕЙНЕРОВ (СО СКРИНШОТОВ)
        ========================================================= */
@@ -912,14 +983,12 @@
     ];
 
     // Базовые коэффициенты ставок относительно выбранного региона:
-    // Обычная крутка = базовая стоимость региона (2 300 / 2 500 / 3 000 ₽)
-    // Остальные тиры масштабируются согласно правилам ТЗ
     const BET_TIERS = [
       { id: 'common', title: 'Обычная крутка', subtitle: 'любой номер', mult: 1, fixedCost: null, minRarity: 0, color: 'text-white' },
       { id: 'uncommon', title: 'Необычный и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 11000, minRarity: 1, color: 'text-[#22c55e]' },
       { id: 'rare', title: 'Редкий и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 60000, minRarity: 2, color: 'text-[#0a84ff]' },
       { id: 'epic', title: 'Эпический и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 250000, minRarity: 3, color: 'text-[#bf5af2]' },
-      { id: 'legendary', title: 'Легендарный', subtitle: 'гарантия редкости', mult: null, fixedCost: 1000000, minRarity: 4, color: 'text-[#ffd60a]' }
+      { id: 'legendary', title: 'Легендарный и выше', subtitle: 'гарантия редкости', mult: null, fixedCost: 800000, minRarity: 4, color: 'text-[#ffd60a]' }
     ];
 
     // Расчет стоимости ставки с учетом региона
@@ -931,35 +1000,6 @@
       }
       return tier.fixedCost;
     }
-
-    // Расшифровки элитных ведомственных серий
-    const VIP_SERIES = {
-      'АМР': { name: 'Правительство РФ / Спецслужбы', mult: 2.8 },
-      'ЕКХ': { name: 'ФСО России («Еду Как Хочу»)', mult: 3.1 },
-      'АМО': { name: 'Мэрия Москвы / Администрация', mult: 2.3 },
-      'СКР': { name: 'Следственный комитет РФ', mult: 2.6 },
-      'ААА': { name: 'Администрация Президента РФ', mult: 2.1 },
-      'ООО': { name: 'ФСБ / Госструктуры', mult: 2.2 },
-      'ВСУ': { name: 'Мугуч попросил', mult: 2.2 },
-      'СВО': { name: 'Чтобы было ебать', mult: 2.4 },
-      'ВОР': { name: 'Воровская серия номеров', mult: 2.5 },
-      'ХХХ': { name: 'Три икса', mult: 2.7 },
-      'ССС': { name: 'Три сестры', mult: 2.9 },
-    };
-
-    // Диапазоны цен по редкостям согласно сбалансированной экономике:
-    // Обычный: 20 – 1 500 ₽ (при ставке 2 500 ₽)
-    // Необычный: 1 500 – 18 000 ₽ (при ставке 11 000 ₽)
-    // Редкий: 18 000 – 75 000 ₽ (при ставке 60 000 ₽)
-    // Эпический: 75 000 – 350 000 ₽ (при ставке 250 000 ₽)
-    // Легендарный: 400 000 – 3 000 000 ₽ (строгий потолок 3 000 000 ₽)
-    const RARITY_INFO = [
-      { name: 'Обычный', color: '#8e8e93', glow: 'glow-rarity-0', bars: 1, xp: 2, minPrice: 20, maxPrice: 1500 },
-      { name: 'Необычный', color: '#22c55e', glow: 'glow-rarity-1', bars: 3, xp: 5, minPrice: 1500, maxPrice: 18000 },
-      { name: 'Редкий', color: '#0a84ff', glow: 'glow-rarity-2', bars: 5, xp: 20, minPrice: 18000, maxPrice: 75000 },
-      { name: 'Эпический', color: '#bf5af2', glow: 'glow-rarity-3', bars: 8, xp: 80, minPrice: 75000, maxPrice: 350000 },
-      { name: 'Легендарный', color: '#ffd60a', glow: 'glow-rarity-4', bars: 10, xp: 300, minPrice: 400000, maxPrice: 3500000 }
-    ];
 
     let state = {
       currentTab: 'plates', // 'plates' или 'cars'
@@ -1303,248 +1343,300 @@
       let targetRarity = 0;
       const roll = Math.random();
 
-      // ВЕРОЯТНОСТИ ВЫПАДЕНИЯ ПО ТИПУ СТАВКИ
+      // СБАЛАНСИРОВАННЫЕ ВЕРОЯТНОСТИ (МИКРО-ШАНС НА МИФИК И СЕКРЕТ)
       if (isSuperLuck) {
-        // На 1 клевере: шанс на эпик/легендарку
-        targetRarity = roll < 0.45 ? 4 : (roll < 0.85 ? 3 : 2);
+        if (roll < 0.002) targetRarity = 6;      // Секретный 0.2%
+        else if (roll < 0.02) targetRarity = 5;  // Мифический 1.8%
+        else if (roll < 0.35) targetRarity = 4;  // Легендарный 33%
+        else targetRarity = 3;                   // Эпический 65%
       } else if (betTierId === 'legendary') {
-        // Легендарная ставка: всегда легендарный
-        targetRarity = 4;
+        // Ставка Легендарная: 99.7% строго легендарки, мифик и секрет — ультраредкий джекпот
+        if (roll < 0.0003) targetRarity = 6;     // Секретный 0.03% (1 из ~3300)
+        else if (roll < 0.003) targetRarity = 5; // Мифический 0.27% (1 из ~370)
+        else targetRarity = 4;                   // Легендарный 99.7%
       } else if (betTierId === 'epic') {
-        // Эпическая ставка: гарантирован минимум эпический, легендарка попадается с шансом ~12%
-        targetRarity = roll < 0.12 ? 4 : 3;
+        if (roll < 0.00005) targetRarity = 6;    // Секретный 0.005%
+        else if (roll < 0.001) targetRarity = 5; // Мифический 0.1%
+        else if (roll < 0.10) targetRarity = 4;  // Легендарный ~9.9%
+        else targetRarity = 3;                   // Эпический ~90%
       } else if (betTierId === 'rare') {
-        // Редкая ставка: эпический промелькает раз в 8-15 прокрутов (~9%), легендарный сверхредко (0.2%)
-        if (roll < 0.002) {
-          targetRarity = 4;
-        } else if (roll < 0.09) {
-          targetRarity = 3;
-        } else {
-          targetRarity = 2;
-        }
+        if (roll < 0.00001) targetRarity = 6;    // 0.001%
+        else if (roll < 0.0003) targetRarity = 5;// 0.029%
+        else if (roll < 0.025) targetRarity = 4; // 2.47%
+        else if (roll < 0.13) targetRarity = 3;  // ~10.5%
+        else targetRarity = 2;                   // ~87%
       } else if (betTierId === 'uncommon') {
-        // Необычная ставка: гарантирован минимум необычный; эпические и легендарные очень редки
-        if (roll < 0.001) {
-          targetRarity = 4; // 0.1%
-        } else if (roll < 0.01) {
-          targetRarity = 3; // ~0.9%
-        } else if (roll < 0.15) {
-          targetRarity = 2; // ~14%
-        } else {
-          targetRarity = 1; // 85%
-        }
+        if (roll < 0.00001) targetRarity = 6;
+        else if (roll < 0.0001) targetRarity = 5;
+        else if (roll < 0.006) targetRarity = 4;
+        else if (roll < 0.05) targetRarity = 3;
+        else if (roll < 0.22) targetRarity = 2;
+        else targetRarity = 1;
       } else {
-        // Обычная ставка: эпические и легендарные падают очень редко
-        if (roll < 0.001) {
-          targetRarity = 4; // 0.1%
-        } else if (roll < 0.009) {
-          targetRarity = 3; // 0.8%
-        } else if (roll < 0.05) {
-          targetRarity = 2; // ~4%
-        } else if (roll < 0.27) {
-          targetRarity = 1; // ~22%
-        } else {
-          targetRarity = 0; // ~73%
-        }
+        // Обычная ставка
+        if (roll < 0.000005) targetRarity = 6;   // 1 из 200 000
+        else if (roll < 0.00008) targetRarity = 5;// ~1 из 12 500
+        else if (roll < 0.005) targetRarity = 4; // Легендарный 0.5%
+        else if (roll < 0.035) targetRarity = 3; // Эпический 3.0%
+        else if (roll < 0.16) targetRarity = 2;  // Редкий 12.5%
+        else if (roll < 0.44) targetRarity = 1;  // Необычный 28%
+        else targetRarity = 0;                   // Обычный 56%
       }
 
-      // Генерация комбинаций символов под определенную редкость
-      if (targetRarity === 4) {
-        // Легендарный: три нуля или спецсерия
+      // Генерация комбинаций символов со строгой логикой атрибутов
+      if (targetRarity === 6) {
+        // СЕКРЕТНЫЙ (6): Абсолютные венцы коллекции на престижных кодах
+        const eliteSecretRegions = [
+          { code: '77', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+          { code: '777', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+          { code: '99', name: 'Москва', isCapital: true, isTop: true, cost: 3000, mult: 1.4 },
+          { code: '78', name: 'Санкт-Петербург', isTop: true, cost: 3000, mult: 1.3 },
+          { code: '716', name: 'Татарстан (Казань)', isTop: true, cost: 3000, mult: 1.25 }
+        ];
+        regionObj = getRandomItem(eliteSecretRegions);
+
+        const secretCombos = [
+          { l: 'АМР', d: '000', note: 'Абсолютный раритет: А000МР на столичном коде' },
+          { l: 'ЕКХ', d: '777', note: 'Культовый Е777КХ ФСО России на трёх топорах' },
+          { l: 'ЕКХ', d: '001', note: 'Первый борт спецслужбы: Е001КХ' },
+          { l: 'ХХХ', d: '000', note: 'Три Икса с тремя нулями: Х000ХХ' },
+          { l: 'ВОР', d: '777', note: 'Коронованный В777ОР на счастливом коде' },
+          { l: 'ААА', d: '000', note: 'Гараж особого назначения: А000АА 000' },
+          { l: 'ССС', d: '777', note: 'Элитные «Три сестры» С777СС на топовом регионе' },
+          { l: 'ЗЛО', d: '666', note: 'Апокалиптический раритет: З666ЛО 666' }
+        ];
+        const pick = getRandomItem(secretCombos);
+        l1 = pick.l[0]; l2 = pick.l[1]; l3 = pick.l[2];
+        d1 = pick.d[0]; d2 = pick.d[1]; d3 = pick.d[2];
+      } else if (targetRarity === 5) {
+        // МИФИЧЕСКИЙ (5): Элитные спецсерии с триплетами или первой десяткой
+        const topRegions = REGIONS.filter(r => r.isTop || r.isCapital);
+        regionObj = getRandomItem(topRegions);
+
+        const mythicVip = getRandomItem(['АМР', 'ЕКХ', 'ВОР', 'ХХХ', 'ССС', 'АМО', 'СКР', 'МММ']);
+        l1 = mythicVip[0]; l2 = mythicVip[1]; l3 = mythicVip[2];
         if (Math.random() < 0.5) {
-          d1 = '0'; d2 = '0'; d3 = '0';
-        } else {
-          const vipCode = getRandomItem(Object.keys(VIP_SERIES));
-          l1 = vipCode[0]; l2 = vipCode[1]; l3 = vipCode[2];
-          d1 = '7'; d2 = '7'; d3 = '7';
-        }
-      } else if (targetRarity === 3) {
-        // Эпический: три семерки или совпадение с кодом региона
-        if (Math.random() < 0.5) {
-          d1 = '7'; d2 = '7'; d3 = '7';
+          const rep = getRandomItem(['7', '9', '1', '5']);
+          d1 = rep; d2 = rep; d3 = rep;
+        } else if (Math.random() < 0.8) {
+          d1 = '0'; d2 = '0'; d3 = getRandomItem(['1', '7', '9']);
         } else {
           const padded = regionObj.code.padStart(3, '0');
           d1 = padded[0]; d2 = padded[1]; d3 = padded[2];
         }
+      } else if (targetRarity === 4) {
+        // ЛЕГЕНДАРНЫЙ (4): Ведомственная серия со стандартными цифрами ИЛИ три нуля без спецсерии
+        const legendaryType = Math.random();
+        if (legendaryType < 0.35) {
+          // Три нуля 000 с обычными буквами (не VIP, чтобы не уходить в мифик)
+          d1 = '0'; d2 = '0'; d3 = '0';
+          const rL = getRandomItem(ALLOWED_LETTERS);
+          l1 = rL; l2 = rL; l3 = rL;
+        } else if (legendaryType < 0.70) {
+          // Ведомственная спецсерия со стандартными неповторяющимися цифрами (например А482МР, Е195КХ)
+          const vipList = ['АМР', 'ЕКХ', 'АМО', 'ООО', 'СКР', 'ААА', 'ВМР', 'МММ'];
+          const v = getRandomItem(vipList);
+          l1 = v[0]; l2 = v[1]; l3 = v[2];
+          // Генерируем обычные цифры, исключая 000 и три одинаковые
+          d1 = Math.floor(Math.random() * 9 + 1).toString();
+          d2 = Math.floor(Math.random() * 10).toString();
+          d3 = Math.floor(Math.random() * 9 + 1).toString();
+          if (d1 === d2 && d2 === d3) d3 = ((parseInt(d3) + 1) % 10).toString();
+        } else {
+          // Одинаковые три буквы серии с красивым круглым числом (например М100ММ, С500СС)
+          const rL = getRandomItem(ALLOWED_LETTERS);
+          l1 = rL; l2 = rL; l3 = rL;
+          d1 = Math.floor(Math.random() * 9 + 1).toString();
+          d2 = '0';
+          d3 = '0';
+        }
+      } else if (targetRarity === 3) {
+        // ЭПИЧЕСКИЙ (3): Три семёрки (777), совпадение с регионом или культовые слова (ХАМ, ТОП, БАН, ЗЛО)
+        if (Math.random() < 0.45) {
+          d1 = '7'; d2 = '7'; d3 = '7';
+        } else if (Math.random() < 0.75) {
+          const padded = regionObj.code.padStart(3, '0');
+          d1 = padded[0]; d2 = padded[1]; d3 = padded[2];
+        } else {
+          const words = ['ХАМ', 'ТОП', 'БАН', 'ЗЛО'];
+          const w = getRandomItem(words);
+          l1 = w[0]; l2 = w[1]; l3 = w[2];
+          const rnd = Math.floor(Math.random() * 9 + 1).toString();
+          d1 = rnd; d2 = rnd; d3 = rnd;
+        }
       } else if (targetRarity === 2) {
-        // Редкий: цифры подряд или три одинаковые
+        // РЕДКИЙ (2): Цифры подряд (123, 234...) или одинаковые три цифры (111, 222... кроме 777)
         if (Math.random() < 0.5) {
           const s = Math.floor(Math.random() * 7) + 1;
           d1 = s.toString(); d2 = (s + 1).toString(); d3 = (s + 2).toString();
         } else {
-          const r = Math.floor(Math.random() * 9) + 1;
-          d1 = r.toString(); d2 = r.toString(); d3 = r.toString();
+          const poolDigits = ['1', '2', '3', '4', '5', '6', '8', '9'];
+          const r = getRandomItem(poolDigits);
+          d1 = r; d2 = r; d3 = r;
         }
       } else if (targetRarity === 1) {
-        // Необычный: ноль впереди или зеркалка
-        d1 = '0';
+        // НЕОБЫЧНЫЙ (1): Ноль впереди (005, 069), круглые сотни (100, 200) или зеркалки цифр/букв
+        const pickType = Math.random();
+        if (pickType < 0.35) {
+          d1 = '0';
+          d2 = Math.floor(Math.random() * 9 + 1).toString();
+          d3 = Math.floor(Math.random() * 9 + 1).toString();
+        } else if (pickType < 0.65) {
+          d1 = Math.floor(Math.random() * 9 + 1).toString();
+          d2 = '0';
+          d3 = '0';
+        } else {
+          // Зеркалка цифр
+          const dA = Math.floor(Math.random() * 9 + 1).toString();
+          const dB = Math.floor(Math.random() * 10).toString();
+          d1 = dA; d2 = dB; d3 = dA;
+        }
+      } else {
+        // ОБЫЧНЫЙ (0): Обычные разные цифры, без красивых совпадений
+        d1 = Math.floor(Math.random() * 9 + 1).toString();
         d2 = Math.floor(Math.random() * 9 + 1).toString();
         d3 = Math.floor(Math.random() * 9 + 1).toString();
+        while (d1 === d2 && d2 === d3) {
+          d3 = ((parseInt(d3) + 1) % 10).toString();
+        }
       }
 
       const digits = `${d1}${d2}${d3}`;
       const letters = `${l1}${l2}${l3}`;
-      
-      let determinedRarity = targetRarity;
-      let totalMultiplier = 1.0;
-      let modifiers = [];
 
-      // 1. Базовый бейдж удачи
+      // СТРОГАЯ ОЦЕНКА РЕДКОСТИ ПО ФАКТИЧЕСКИМ ПРИЗНАКАМ
+      let determinedRarity = 0;
+      let modifiers = [];
+      let totalMultiplier = 1.0;
+
+      // 1. Проверка на СЕКРЕТНЫЙ (6): Элитные спецсерии + (000 или 777 или 001) на столичном коде
+      if (['АМР', 'ЕКХ', 'ВОР', 'ХХХ', 'ССС', 'ААА', 'ЗЛО'].includes(letters) && 
+          (digits === '000' || digits === '777' || digits === '001' || digits === '666') && 
+          (regionObj.isCapital || regionObj.isTop)) {
+        determinedRarity = targetRarity >= 5 ? 6 : targetRarity;
+      }
+      // 2. Проверка на МИФИЧЕСКИЙ (5): Только если целевая редкость позволяла мифик
+      else if (targetRarity >= 5 && VIP_SERIES[letters] && ((d1 === d2 && d2 === d3) || (d1 === '0' && d2 === '0'))) {
+        determinedRarity = 5;
+      }
+      // 3. Проверка на ЛЕГЕНДАРНЫЙ (4): Три нуля (000) ИЛИ ведомственная/культовая серия номеров ИЛИ одинаковые буквы
+      else if (digits === '000' || VIP_SERIES[letters] || (l1 === l2 && l2 === l3 && (d2 === '0' && d3 === '0'))) {
+        determinedRarity = 4;
+      }
+      // 4. Проверка на ЭПИЧЕСКИЙ (3): Три семёрки (777), совпадение с регионом или культовые слова
+      else if (digits === '777' || digits === '666' || digits === regionObj.code.padStart(3, '0') || ['ХАМ', 'ТОП', 'БАН', 'ЗЛО'].includes(letters)) {
+        determinedRarity = 3;
+      }
+      // 5. Проверка на РЕДКИЙ (2): Три одинаковые цифры или цифры по порядку
+      else if ((d1 === d2 && d2 === d3) || ((parseInt(d2) === parseInt(d1) + 1) && (parseInt(d3) === parseInt(d2) + 1))) {
+        determinedRarity = 2;
+      }
+      // 6. Проверка на НЕОБЫЧНЫЙ (1): Ноль впереди, круглая сотня, зеркалка цифр или зеркалка букв
+      else if (d1 === '0' || (d2 === '0' && d3 === '0') || (d1 === d3) || (l1 === l3)) {
+        determinedRarity = 1;
+      } else {
+        determinedRarity = 0;
+      }
+
+      // Если была куплена ставка с гарантией редкости, гарантируем соответствующий минимальный ранг
+      if (betTierId === 'legendary') determinedRarity = Math.max(determinedRarity, 4);
+      else if (betTierId === 'epic') determinedRarity = Math.max(determinedRarity, 3);
+      else if (betTierId === 'rare') determinedRarity = Math.max(determinedRarity, 2);
+      else if (betTierId === 'uncommon') determinedRarity = Math.max(determinedRarity, 1);
+
+      // ФОРМИРОВАНИЕ МОДИФИКАТОРОВ И МНОЖИТЕЛЕЙ
       modifiers.push({ text: '🍀 Удача: результат текущей крутки', isAccent: false });
 
-      // 2. Столичный регион (код 77, 99, 777)
       if (regionObj.isCapital) {
         totalMultiplier *= regionObj.mult;
         modifiers.push({ text: `Столичный регион <span class="font-bold text-[#22c55e]">×${regionObj.mult.toFixed(1).replace('.', ',')}</span>`, isAccent: true });
       }
 
-      // 3. Спецсерии (АМР, ЕКХ, АМО, СКР, ААА, ООО)
       if (VIP_SERIES[letters]) {
-        determinedRarity = Math.max(determinedRarity, 4);
         const vip = VIP_SERIES[letters];
         totalMultiplier *= vip.mult;
-        modifiers.push({ text: `Спецсерия ${letters} (${vip.name}) <span class="font-bold text-[#ffd60a]">×${vip.mult.toFixed(1).replace('.', ',')}</span>`, isAccent: true });
+        modifiers.push({ text: `Серия ${letters} (${vip.name}) <span class="font-bold text-[#ffd60a]">×${vip.mult.toFixed(1).replace('.', ',')}</span>`, isAccent: true });
       }
 
-      // 4. Три нуля 000
       if (digits === '000') {
-        determinedRarity = Math.max(determinedRarity, 4);
-        totalMultiplier *= 2.6;
-        modifiers.push({ text: `Три нуля (000) <span class="font-bold text-[#ffd60a]">×2,6</span>`, isAccent: true });
-      }
-      // 5. Три семерки 777
-      else if (digits === '777') {
-        determinedRarity = Math.max(determinedRarity, 3);
+        totalMultiplier *= 2.5;
+        modifiers.push({ text: `Три нуля (000) <span class="font-bold text-[#ffd60a]">×2,5</span>`, isAccent: true });
+      } else if (digits === '777') {
         totalMultiplier *= 2.1;
         modifiers.push({ text: `Три семерки (777) <span class="font-bold text-[#bf5af2]">×2,1</span>`, isAccent: true });
-      }
-      // 6. Цифры совпадают с кодом региона
-      else if (digits === regionObj.code.padStart(3, '0')) {
-        determinedRarity = Math.max(determinedRarity, 3);
+      } else if (digits === '666') {
+        totalMultiplier *= 1.9;
+        modifiers.push({ text: `Чертова дюжина (666) <span class="font-bold text-rose-500">×1,9</span>`, isAccent: true });
+      } else if (digits === regionObj.code.padStart(3, '0')) {
         totalMultiplier *= 1.8;
         modifiers.push({ text: `Цифры совпадают с регионом (${regionObj.code}) <span class="font-bold text-[#bf5af2]">×1,8</span>`, isAccent: true });
-      }
-      // 7. Три одинаковые цифры (111..999 кроме 777)
-      else if (d1 === d2 && d2 === d3) {
-        determinedRarity = Math.max(determinedRarity, 2);
-        totalMultiplier *= 1.7;
-        modifiers.push({ text: `Три одинаковые цифры (${digits}) <span class="font-bold text-[#0a84ff]">×1,7</span>`, isAccent: true });
-      }
-      // 8. Цифры подряд (123, 234...)
-      else if ((parseInt(d2) === parseInt(d1) + 1) && (parseInt(d3) === parseInt(d2) + 1)) {
-        determinedRarity = Math.max(determinedRarity, 2);
+      } else if (d1 === d2 && d2 === d3) {
+        totalMultiplier *= 1.6;
+        modifiers.push({ text: `Три одинаковые цифры (${digits}) <span class="font-bold text-[#0a84ff]">×1,6</span>`, isAccent: true });
+      } else if ((parseInt(d2) === parseInt(d1) + 1) && (parseInt(d3) === parseInt(d2) + 1)) {
         totalMultiplier *= 1.4;
         modifiers.push({ text: `Цифры по порядку (${digits}) <span class="font-bold text-[#0a84ff]">×1,4</span>`, isAccent: true });
-      }
-      // 9. Ноль впереди (005, 069...)
-      else if (d1 === '0') {
-        determinedRarity = Math.max(determinedRarity, 1);
+      } else if (d1 === '0') {
         if (d2 === '0') {
-          totalMultiplier *= 1.9;
-          modifiers.push({ text: `Малый номер первой десятки (${digits}) <span class="font-bold text-[#22c55e]">×1,9</span>`, isAccent: true });
+          totalMultiplier *= 1.8;
+          modifiers.push({ text: `Малый номер первой десятки (${digits}) <span class="font-bold text-[#22c55e]">×1,8</span>`, isAccent: true });
         } else {
-          totalMultiplier *= 1.3;
-          modifiers.push({ text: `Ноль впереди <span class="font-bold text-[#22c55e]">×1,3</span>`, isAccent: true });
+          totalMultiplier *= 1.25;
+          modifiers.push({ text: `Ноль впереди <span class="font-bold text-[#22c55e]">×1,25</span>`, isAccent: true });
         }
-      }
-      // 10. Зеркальные цифры (101, 525...)
-      else if (d1 === d3 && d1 !== d2) {
-        determinedRarity = Math.max(determinedRarity, 1);
-        totalMultiplier *= 1.25;
-        modifiers.push({ text: `Зеркальные цифры (${digits}) <span class="font-bold text-[#22c55e]">×1,25</span>`, isAccent: true });
-      }
-
-      // 11. Палиндром букв (например, Е..Е)
-      if (l1 === l3) {
-        determinedRarity = Math.max(determinedRarity, 1);
+      } else if (d2 === '0' && d3 === '0') {
         totalMultiplier *= 1.35;
-        modifiers.push({ text: `Палиндром букв (${l1}..${l3}) <span class="font-bold text-[#22c55e]">×1,35</span>`, isAccent: true });
+        modifiers.push({ text: `Круглая сотня (${digits}) <span class="font-bold text-[#22c55e]">×1,35</span>`, isAccent: true });
+      } else if (d1 === d3 && d1 !== d2) {
+        totalMultiplier *= 1.2;
+        modifiers.push({ text: `Зеркальные цифры (${digits}) <span class="font-bold text-[#22c55e]">×1,2</span>`, isAccent: true });
       }
 
-      // РАСЧЁТ ЦЕНЫ СО СТРОГИМИ ГРАНИЦАМИ
+      if (l1 === l3) {
+        totalMultiplier *= 1.3;
+        modifiers.push({ text: `Зеркальные буквы серии (${l1}-${l2}-${l3}) <span class="font-bold text-sky-400">×1,3</span>`, isAccent: true });
+      }
+
+      // ЛОГИЧНЫЙ РАСЧЕТ СТОИМОСТИ С УЧЕТОМ ДИАПАЗОНОВ РЕДКОСТИ
       const info = RARITY_INFO[determinedRarity];
       let minP = info.minPrice;
       let maxP = info.maxPrice;
 
-      // 1. Обычная ставка (2 500 ₽): в большинстве случаев даёт 150 - 1 100 ₽, 
-      // окупаемость (необычный/редкий) случается дозированно, не на каждом шагу
-      if (betTierId === 'common' && determinedRarity === 0) {
-        // Смещение распределения к нижнему и среднему чеку для плавного прогресса
-        const weightedRoll = Math.pow(Math.random(), 1.6);
-        minP = 50;
-        maxP = 1350;
+      // Ограничение легендарок для эпической ставки: не выше 1 000 000 ₽
+      if (betTierId === 'epic' && determinedRarity === 4) {
+        maxP = 1000000;
       }
 
-      // 2. Необычная ставка (11 000 ₽): чаще даёт 3 500 – 9 500 ₽, окупается крупным выигрышем (12 000 - 18 000 ₽) примерно 1 раз из 3-4
-      if (betTierId === 'uncommon' && determinedRarity === 1) {
-        const isProfitableUncommon = Math.random() < 0.28;
-        if (isProfitableUncommon) {
-          minP = 11500;
-          maxP = 18000;
-        } else {
-          minP = 2200;
-          maxP = 9800;
-        }
-      }
-
-      // 3. Редкая ставка (60 000 ₽): чаще даёт 22 000 – 52 000 ₽, окупается (65 000 - 75 000 ₽ или выпадением эпика) раз в 3-4 прокрута
-      if (betTierId === 'rare' && determinedRarity === 2) {
-        const isProfitableRare = Math.random() < 0.26;
-        if (isProfitableRare) {
-          minP = 62000;
-          maxP = 75000;
-        } else {
-          minP = 18500;
-          maxP = 54000;
-        }
-      }
-
-      // 4. Эпическая ставка (250 000 ₽): 
-      // чаще даёт 110 000 – 220 000 ₽, окупается (270 000 - 350 000 ₽) раз в 3-4 прокрута;
-      // если выпала легендарка — она строго не дороже 1 000 000 ₽
-      if (betTierId === 'epic') {
-        if (determinedRarity === 4) {
-          minP = 400000;
-          maxP = 1000000; // строгий потолок 1 млн при эпической ставке
-        } else {
-          const isProfitableEpic = Math.random() < 0.25;
-          if (isProfitableEpic) {
-            minP = 260000;
-            maxP = 350000;
-          } else {
-            minP = 90000;
-            maxP = 225000;
-          }
-        }
-      }
-
-      // 5. Легендарная ставка (1 000 000 ₽):
-      // Окупается раз в 1-5 прокрутов (шанс 25%), при этом максимальная цена СТРОГО до 3 000 000 ₽
-      if (betTierId === 'legendary') {
-        const isProfitRoll = Math.random() < 0.25; // окупаемость 1 раз за 4 прокрутки в среднем
-        if (isProfitRoll) {
-          minP = 1050000;
-          maxP = 3000000; // строгий абсолютный потолок 3 000 000 ₽
+      // Сбалансированная экономика легендарной ставки (1 000 000 ₽)
+      if (betTierId === 'legendary' && determinedRarity === 4) {
+        const isLuckyProfit = Math.random() < 0.22; // ~22% шанс на окупаемость
+        if (isLuckyProfit) {
+          minP = 1020000;
+          maxP = 1350000;
         } else {
           minP = 420000;
-          maxP = 940000; // минус по крутке, сдерживающий мгновенное обогащение
+          maxP = 860000; // контролируемый минус, сдерживающий гиперинфляцию
         }
       }
 
-      // Расчёт цены с плавным случайным распределением
-      const normalizedVariance = Math.random();
-      let finalPrice = Math.round(minP + (maxP - minP) * normalizedVariance);
+      // Расчет цены с учетом мультипликаторов
+      const variance = Math.random();
+      let calculatedPrice = Math.round(minP + (maxP - minP) * variance);
 
-      // БОНУС СУПЕР-УДАЧИ (на последнем 1 клевере выигрыш ×5, но не выше абсолютного лимита 3 000 000 ₽)
+      // Бонус супер-удачи на последнем клевере
       if (isSuperLuck) {
-        finalPrice = Math.round(finalPrice * 5);
+        calculatedPrice = Math.round(calculatedPrice * 5);
         modifiers.unshift({ text: `⚡ Супер-Удача: бонус <span class="font-bold text-amber-300">×5</span> к выигрышу!`, isAccent: true });
       }
 
-      // Жёсткий лимит: ни один номер не может стоить дороже 3 000 000 ₽
-      if (finalPrice > 3000000) {
-        finalPrice = 3000000;
-      }
+      // Потолок цен по рангам для стабильной экономики
+      if (determinedRarity === 6) calculatedPrice = Math.min(calculatedPrice, 5000000);
+      else if (determinedRarity === 5) calculatedPrice = Math.min(calculatedPrice, 2700000);
+      else if (determinedRarity === 4) calculatedPrice = Math.min(calculatedPrice, 1350000);
+      else if (determinedRarity === 3) calculatedPrice = Math.min(calculatedPrice, 320000);
+      else if (determinedRarity === 2) calculatedPrice = Math.min(calculatedPrice, 75000);
+      else if (determinedRarity === 1) calculatedPrice = Math.min(calculatedPrice, 12000);
+      else calculatedPrice = Math.min(calculatedPrice, 900);
 
       return {
         id: Date.now() + Math.random(),
@@ -1552,9 +1644,46 @@
         digits, letters,
         region: regionObj,
         rarity: determinedRarity,
-        price: finalPrice,
+        price: calculatedPrice,
         modifiers: modifiers
       };
+    }
+
+    /* ЭПИЧЕСКАЯ АНИМАЦИЯ ДЛЯ МИФИЧЕСКИХ (5) И СЕКРЕТНЫХ (6) НОМЕРОВ */
+    function triggerHighTierEpicDrop(rarityIndex) {
+      const flash = document.getElementById('screenFlashFX');
+      const plate = document.getElementById('plateOuterGlow');
+      const ambient = document.getElementById('plateAmbientGlowEl');
+
+      if (flash) {
+        flash.classList.remove('hidden', 'flash-overlay');
+        void flash.offsetWidth;
+        flash.classList.add('flash-overlay');
+        setTimeout(() => flash.classList.add('hidden'), 700);
+      }
+
+      if (plate) {
+        plate.classList.add('epic-shockwave-anim');
+        setTimeout(() => plate.classList.remove('epic-shockwave-anim'), 800);
+      }
+
+      // Звуковые триумфальные аккорды Tone.js
+      if (rarityIndex === 6) {
+        // Секретный: космический аккорд
+        playBeep("C4");
+        setTimeout(() => playBeep("G4"), 100);
+        setTimeout(() => playBeep("C5"), 200);
+        setTimeout(() => playBeep("E5"), 300);
+        setTimeout(() => playBeep("B5"), 400);
+        showToast('🌟 СЕКРЕТНЫЙ РАРИТЕТ ВЫБИТ!');
+      } else if (rarityIndex === 5) {
+        // Мифический: мощный бас и фанфара
+        playBeep("D4");
+        setTimeout(() => playBeep("A4"), 120);
+        setTimeout(() => playBeep("D5"), 240);
+        setTimeout(() => playBeep("F#5"), 360);
+        showToast('🔥 МИФИЧЕСКИЙ НОМЕР ВЫПАЛ!');
+      }
     }
 
     /* =========================================================
@@ -1663,12 +1792,32 @@
         for (let i = 0; i < 10; i++) {
           const d = document.createElement('div');
           let barColor = i < rar.bars ? 'bg-[#22c55e]' : 'bg-[#2c2c2e]';
+          if (plate.rarity === 6 && i < rar.bars) barColor = 'bg-[#ec4899]';
+          if (plate.rarity === 5 && i < rar.bars) barColor = 'bg-[#ef4444]';
           if (plate.rarity === 4 && i < rar.bars) barColor = 'bg-[#ffd60a]';
           if (plate.rarity === 3 && i < rar.bars) barColor = 'bg-[#bf5af2]';
           if (plate.rarity === 2 && i < rar.bars) barColor = 'bg-[#0a84ff]';
           if (plate.rarity === 0 && i < rar.bars) barColor = 'bg-[#8e8e93]';
           d.className = `w-4 h-1.5 rounded-full transition-colors duration-200 ${barColor}`;
           bars.appendChild(d);
+        }
+      }
+
+      // Адаптивная фоновая подсветка под цвет редкости
+      const ambientGlow = document.getElementById('plateAmbientGlowEl');
+      if (ambientGlow) {
+        if (plate.rarity === 6) {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(236, 72, 153, 0.45) 0%, rgba(147, 51, 234, 0.25) 50%, transparent 80%)';
+        } else if (plate.rarity === 5) {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(239, 68, 68, 0.4) 0%, rgba(185, 28, 28, 0.18) 50%, transparent 80%)';
+        } else if (plate.rarity === 4) {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(255, 214, 10, 0.35) 0%, rgba(202, 138, 4, 0.12) 50%, transparent 80%)';
+        } else if (plate.rarity === 3) {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(191, 90, 242, 0.35) 0%, rgba(147, 51, 234, 0.12) 50%, transparent 80%)';
+        } else if (plate.rarity === 2) {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(10, 132, 255, 0.35) 0%, rgba(29, 78, 216, 0.12) 50%, transparent 80%)';
+        } else {
+          ambientGlow.style.background = 'radial-gradient(circle 240px at center, rgba(34, 197, 94, 0.22) 0%, rgba(16, 75, 32, 0.08) 50%, transparent 80%)';
         }
       }
 
@@ -1814,6 +1963,11 @@
         state.pendingSpin5List = plates;
         renderCurrentPlate(best);
 
+        // Кинематографический триггер для высших рангов
+        if (best.rarity >= 5) {
+          triggerHighTierEpicDrop(best.rarity);
+        }
+
         let totalXp = 0;
         plates.forEach(p => totalXp += RARITY_INFO[p.rarity].xp);
         addXp(totalXp);
@@ -1825,6 +1979,12 @@
         const singlePlate = generatePlateWithDynamicModifiers(state.selectedBetId);
         state.currentPlate = singlePlate;
         renderCurrentPlate(singlePlate);
+
+        // Кинематографический триггер для высших рангов
+        if (singlePlate.rarity >= 5) {
+          triggerHighTierEpicDrop(singlePlate.rarity);
+        }
+
         addXp(RARITY_INFO[singlePlate.rarity].xp);
         playBeep("D5");
       }
@@ -2183,6 +2343,26 @@
       document.getElementById(id)?.classList.add('hidden');
     }
     window.closeModal = closeModal;
+
+    // Явная привязка функций к window для корректной работы в inline onclick обработчиках
+    window.switchAppTab = switchAppTab;
+    window.openContainerInfoModal = openContainerInfoModal;
+    window.triggerContainerOpenProcess = triggerContainerOpenProcess;
+    window.sellRouletteDroppedCar = sellRouletteDroppedCar;
+    window.garageRouletteDroppedCar = garageRouletteDroppedCar;
+    window.spin = spin;
+    window.saveCurrentToGarage = saveCurrentToGarage;
+    window.shareCurrentPlate = shareCurrentPlate;
+    window.toggleSpinMode = toggleSpinMode;
+    window.addShopBonus = addShopBonus;
+    window.openGarageModal = openGarageModal;
+    window.sellFromGarage = sellFromGarage;
+    window.sellAllGarage = sellAllGarage;
+    window.sellSpin5Item = sellSpin5Item;
+    window.sellAllSpin5Remaining = sellAllSpin5Remaining;
+    window.finishSpin5Modal = finishSpin5Modal;
+    window.showToast = showToast;
+    window.resetProgress = resetProgress;
 
     window.onload = function() {
       loadState();
