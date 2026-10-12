@@ -1094,8 +1094,8 @@
       track.style.transform = 'translateX(0px)';
       track.innerHTML = '';
 
-      // Генерируем 40 карточек для рулетки (30-я карточка — выигрышная)
-      const allRarities = Object.keys(CAR_RARITIES);
+      // Допустимые редкости только из текущего контейнера (без запрещённых категорий)
+      const allowedCaseRarities = cfg.chances.map(c => c.rarity);
       const totalCards = 40;
       const winningIndex = 30;
 
@@ -1104,7 +1104,7 @@
         if (i === winningIndex) {
           cardData = winningCar;
         } else {
-          const rRarity = getRandomItem(allRarities);
+          const rRarity = getRandomItem(allowedCaseRarities);
           const rModel = getRandomItem(CAR_POOL[rRarity]);
           cardData = { name: rModel.name, rarity: rRarity };
         }
